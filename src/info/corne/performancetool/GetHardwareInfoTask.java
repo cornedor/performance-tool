@@ -13,9 +13,11 @@ public class GetHardwareInfoTask extends AsyncTask<String, Void, Void>{
 	private MainActivity main;
 	private ProgressDialog dialog;
 	private String[] result;
-	public GetHardwareInfoTask(MainActivity main)
+	int fragment;
+	public GetHardwareInfoTask(MainActivity main, int fragment)
 	{
 		this.main = main;
+		this.fragment = fragment;
 		dialog = ProgressDialog.show(main, "Please wait...", "Gathering some info.");
 	}
 	
@@ -48,7 +50,7 @@ public class GetHardwareInfoTask extends AsyncTask<String, Void, Void>{
 	@Override
 	protected void onPostExecute(Void res)
 	{
-		main.hardwareInfoLoaded(this.result);
+		main.hardwareInfoLoaded(result, fragment);
 		dialog.dismiss();
 	}
 

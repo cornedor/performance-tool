@@ -10,5 +10,7 @@
     <string name="cpu_cap">Frequency cap</string>
     <string name="governor">Governor</string>
     <string name="apply">Apply</string>
+    <string name="menu_refresh">Refresh</string>
+    <string name="mhz">MHz</string>
 
 </resources>

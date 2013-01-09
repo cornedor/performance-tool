@@ -4,6 +4,7 @@ import java.util.Locale;
 
 import android.app.ActionBar;
 import android.app.FragmentTransaction;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -13,6 +14,7 @@ import android.support.v4.view.ViewPager;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Adapter;
@@ -35,6 +37,7 @@ public class MainActivity extends FragmentActivity implements
 	 */
 	SectionsPagerAdapter mSectionsPagerAdapter;
 	CPUSettingsActivity cpuSettingsActivity;
+	String[] hardwareInfo;
 
 	/**
 	 * The {@link ViewPager} that will host the section contents.
@@ -81,9 +84,28 @@ public class MainActivity extends FragmentActivity implements
 					.setText(mSectionsPagerAdapter.getPageTitle(i))
 					.setTabListener(this));
 		}
-		new GetHardwareInfoTask(this).execute(
+		getHardwareInfo(0);
+		
+	}
+	@Override
+	public boolean onOptionsItemSelected(MenuItem menu)
+	{
+		switch (menu.getItemId()) {
+		case R.id.menu_refresh:
+			getHardwareInfo(0);
+			return true;
+		default:
+			return super.onOptionsItemSelected(menu);
+		}
+		
+	}
+	public void getHardwareInfo(int fragment)
+	{
+		new GetHardwareInfoTask(this, fragment).execute(
 				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors",
-				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies"
+				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies",
+				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor",
+				"/sys/module/cpu_tegra/parameters/cpu_user_cap"
 				);
 	}
 
@@ -112,12 +134,26 @@ public class MainActivity extends FragmentActivity implements
 			FragmentTransaction fragmentTransaction) {
 	}
 	
-	public void hardwareInfoLoaded(String[] result)
+	public void hardwareInfoLoaded(String[] result, int fragment)
 	{
 		Spinner governorSpinner = (Spinner) findViewById(R.id.governorSpinner);
 		Spinner frequencyCapSpinner = (Spinner) findViewById(R.id.frequencyCapSpinner);
-		governorSpinner.setAdapter(generateAdapter(result[0].split(" ")));
-		frequencyCapSpinner.setAdapter(generateAdapter(result[1].split(" ")));
+		String[] governors = result[0].split(" ");
+		String[] freqencies = result[1].split(" ");
+		int currentFrequencyPos = freqencies.length-1;
+		for(int i = 0; i < freqencies.length; i++)
+		{
+			if(result[3].indexOf(freqencies[i]) != -1)
+				currentFrequencyPos = i;
+			freqencies[i] = freqencies[i].replaceFirst("000", "") + getResources().getString(R.string.mhz);
+		}
+		governorSpinner.setAdapter(generateAdapter(governors));
+		frequencyCapSpinner.setAdapter(generateAdapter(freqencies));
+		for(int i = 0; i < governors.length; i++)
+			if(result[2].indexOf(governors[i]) != -1)
+				governorSpinner.setSelection(i);
+		frequencyCapSpinner.setSelection(currentFrequencyPos);
+		
 	}
 	public ArrayAdapter<String> generateAdapter(String[] args)
 	{

@@ -8,8 +8,9 @@ import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
-public class CPUSettingsActivity extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class CPUSettingsActivity extends Fragment {
 	public CPUSettingsActivity()
 	{
 		
@@ -23,26 +24,12 @@ public class CPUSettingsActivity extends Fragment implements LoaderManager.Loade
 	public void onActivityCreated(Bundle savedInstanceState)
 	{
 		super.onActivityCreated(savedInstanceState);
+		System.out.println("Rebuild");
 	}
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
 		View view = inflater.inflate(R.layout.cpu_settings, container, false);
 		return view;
-	}
-	@Override
-	public Loader<Cursor> onCreateLoader(int arg0, Bundle arg1) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	@Override
-	public void onLoadFinished(Loader<Cursor> arg0, Cursor arg1) {
-		// TODO Auto-generated method stub
-		
-	}
-	@Override
-	public void onLoaderReset(Loader<Cursor> arg0) {
-		// TODO Auto-generated method stub
-		
 	}
 }
