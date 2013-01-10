@@ -38,8 +38,7 @@ public class MainActivity extends FragmentActivity implements
 	CPUSettingsActivity cpuSettingsActivity;
 	AdvancedSettingsActivity advancedSettingsActivity;
 	String[] hardwareInfo;
-	String selectedFrequencyCap = "";
-	String selectedGovernor = "";
+	String[] ioSchedulers;
 
 	/**
 	 * The {@link ViewPager} that will host the section contents.
@@ -140,20 +139,17 @@ public class MainActivity extends FragmentActivity implements
 	{
 		Spinner governorSpinner = (Spinner) findViewById(R.id.governorSpinner);
 		Spinner frequencyCapSpinner = (Spinner) findViewById(R.id.frequencyCapSpinner);
-		Spinner ioScheluderSpinner = (Spinner) findViewById(R.id.ioSchedulerSpinner);
+		Spinner ioSchedulerSpinner = (Spinner) findViewById(R.id.ioSchedulerSpinner);
 		String[] governors = result[0].split(" ");
 		String[] freqencies = result[1].split(" ");
-		String[] ioScheluders = result[4].split(" ");
+		ioSchedulers = result[4].split(" ");
 		int currentFrequencyPos = freqencies.length-1;
-		int currentIOScheduler = ioScheluders.length-1;
+		int currentIOScheduler = ioSchedulers.length-1;
 		for(int i = 0; i < freqencies.length; i++)
 		{
 			
 			if(result[3].indexOf(freqencies[i]) != -1)
-			{
 				currentFrequencyPos = i;
-				selectedFrequencyCap = freqencies[i];
-			}
 			freqencies[i] = freqencies[i].replaceFirst("000", "") + getResources().getString(R.string.mhz);
 			
 		}
@@ -163,51 +159,35 @@ public class MainActivity extends FragmentActivity implements
 		for(int i = 0; i < governors.length; i++)
 		{
 			if(result[2].indexOf(governors[i]) != -1)
-			{
 				governorSpinner.setSelection(i);
-				selectedGovernor = governors[i];
-			}
 		}
 		frequencyCapSpinner.setSelection(currentFrequencyPos);
 		
-		for(int i = 0; i < ioScheluders.length; i++)
+		for(int i = 0; i < ioSchedulers.length; i++)
 		{
-			if(ioScheluders[i].charAt(0) == '[')
+			if(ioSchedulers[i].charAt(0) == '[')
 			{
 				currentIOScheduler = i;	
-				ioScheluders[i] = ioScheluders[i].substring(1, ioScheluders[i].length()-1);
+				ioSchedulers[i] = ioSchedulers[i].substring(1, ioSchedulers[i].length()-1);
 			}
 		}
-		ioScheluderSpinner.setAdapter(generateAdapter(ioScheluders));
-		ioScheluderSpinner.setSelection(currentIOScheduler);
-		
-		((Spinner) findViewById(R.id.frequencyCapSpinner)).setOnItemSelectedListener(new OnItemSelectedListener() {
-
-			@Override
-			public void onItemSelected(AdapterView<?> parent, View view,
-					int pos, long id) {
-				selectedFrequencyCap = parent.getItemAtPosition(pos).toString();
-			}
-			@Override
-			public void onNothingSelected(AdapterView<?> arg0) {}
-		});
-		((Spinner) findViewById(R.id.governorSpinner)).setOnItemSelectedListener(new OnItemSelectedListener() {
-
-			@Override
-			public void onItemSelected(AdapterView<?> parent, View view,
-					int pos, long id) {
-				selectedGovernor = parent.getItemAtPosition(pos).toString();
-			}
-			@Override
-			public void onNothingSelected(AdapterView<?> arg0) {}
-		});
+		ioSchedulerSpinner.setAdapter(generateAdapter(ioSchedulers));
+		ioSchedulerSpinner.setSelection(currentIOScheduler);
 	}
 	public void applyCpuSettings(View button)
 	{
+		String selectedFrequencyCap = (String)(((Spinner) findViewById(R.id.frequencyCapSpinner)).getSelectedItem());
+		String selectedGovernor = (String)(((Spinner) findViewById(R.id.governorSpinner)).getSelectedItem());
 		String[] frequencyCommand = {"su", "-c", "echo " + selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000") + " > /sys/module/cpu_tegra/parameters/cpu_user_cap"};
 		new SetHardwareInfoTask(this, false).execute(frequencyCommand);
 		String[] governorCommand = {"su", "-c", "echo " + selectedGovernor + " > /sys/devices/system/cpu/cpu[[CPU]]/cpufreq/scaling_governor"};
 		new SetHardwareInfoTask(this, true).execute(governorCommand);
+	}
+	public void applyAdvancedSettings(View button)
+	{
+		String selectedScheduler = (String)(((Spinner) findViewById(R.id.ioSchedulerSpinner)).getSelectedItem());
+		String[] schedulerCommand = {"su", "-c", "echo \"" + selectedScheduler + "\" > /sys/block/mmcblk0/queue/scheduler" };
+		new SetHardwareInfoTask(this, false).execute(schedulerCommand);
 	}
 	public ArrayAdapter<String> generateAdapter(String[] args)
 	{
