@@ -34,13 +34,8 @@
             android:id="@+id/cpuApplyButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:onClick="applyCpuSettings"
             android:text="@string/apply" />
-
-        <ProgressBar
-            android:id="@+id/cpuApplyLoader"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="invisible" />
 
     </LinearLayout>
 

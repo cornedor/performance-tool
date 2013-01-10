@@ -15,10 +15,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends FragmentActivity implements
 		ActionBar.TabListener {
@@ -35,6 +38,8 @@ public class MainActivity extends FragmentActivity implements
 	CPUSettingsActivity cpuSettingsActivity;
 	AdvancedSettingsActivity advancedSettingsActivity;
 	String[] hardwareInfo;
+	String selectedFrequencyCap = "";
+	String selectedGovernor = "";
 
 	/**
 	 * The {@link ViewPager} that will host the section contents.
@@ -143,16 +148,26 @@ public class MainActivity extends FragmentActivity implements
 		int currentIOScheduler = ioScheluders.length-1;
 		for(int i = 0; i < freqencies.length; i++)
 		{
+			
 			if(result[3].indexOf(freqencies[i]) != -1)
+			{
 				currentFrequencyPos = i;
+				selectedFrequencyCap = freqencies[i];
+			}
 			freqencies[i] = freqencies[i].replaceFirst("000", "") + getResources().getString(R.string.mhz);
+			
 		}
 		governorSpinner.setAdapter(generateAdapter(governors));
 		
 		frequencyCapSpinner.setAdapter(generateAdapter(freqencies));
 		for(int i = 0; i < governors.length; i++)
+		{
 			if(result[2].indexOf(governors[i]) != -1)
+			{
 				governorSpinner.setSelection(i);
+				selectedGovernor = governors[i];
+			}
+		}
 		frequencyCapSpinner.setSelection(currentFrequencyPos);
 		
 		for(int i = 0; i < ioScheluders.length; i++)
@@ -166,7 +181,33 @@ public class MainActivity extends FragmentActivity implements
 		ioScheluderSpinner.setAdapter(generateAdapter(ioScheluders));
 		ioScheluderSpinner.setSelection(currentIOScheduler);
 		
-		
+		((Spinner) findViewById(R.id.frequencyCapSpinner)).setOnItemSelectedListener(new OnItemSelectedListener() {
+
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View view,
+					int pos, long id) {
+				selectedFrequencyCap = parent.getItemAtPosition(pos).toString();
+			}
+			@Override
+			public void onNothingSelected(AdapterView<?> arg0) {}
+		});
+		((Spinner) findViewById(R.id.governorSpinner)).setOnItemSelectedListener(new OnItemSelectedListener() {
+
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View view,
+					int pos, long id) {
+				selectedGovernor = parent.getItemAtPosition(pos).toString();
+			}
+			@Override
+			public void onNothingSelected(AdapterView<?> arg0) {}
+		});
+	}
+	public void applyCpuSettings(View button)
+	{
+		String[] frequencyCommand = {"su", "-c", "echo " + selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000") + " > /sys/module/cpu_tegra/parameters/cpu_user_cap"};
+		new SetHardwareInfoTask(this, false).execute(frequencyCommand);
+		String[] governorCommand = {"su", "-c", "echo " + selectedGovernor + " > /sys/devices/system/cpu/cpu[[CPU]]/cpufreq/scaling_governor"};
+		new SetHardwareInfoTask(this, true).execute(governorCommand);
 	}
 	public ArrayAdapter<String> generateAdapter(String[] args)
 	{
