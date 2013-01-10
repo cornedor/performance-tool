@@ -12,5 +12,6 @@
     <string name="apply">Apply</string>
     <string name="menu_refresh">Refresh</string>
     <string name="mhz">MHz</string>
+    <string name="io_scheduler">Change IO scheduler</string>
 
 </resources>

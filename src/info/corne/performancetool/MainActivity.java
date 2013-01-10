@@ -1,10 +1,7 @@
 package info.corne.performancetool;
 
-import java.util.Locale;
-
 import android.app.ActionBar;
 import android.app.FragmentTransaction;
-import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -16,13 +13,12 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.Adapter;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.Spinner;
-import android.widget.SpinnerAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class MainActivity extends FragmentActivity implements
 		ActionBar.TabListener {
@@ -37,6 +33,7 @@ public class MainActivity extends FragmentActivity implements
 	 */
 	SectionsPagerAdapter mSectionsPagerAdapter;
 	CPUSettingsActivity cpuSettingsActivity;
+	AdvancedSettingsActivity advancedSettingsActivity;
 	String[] hardwareInfo;
 
 	/**
@@ -105,8 +102,8 @@ public class MainActivity extends FragmentActivity implements
 				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors",
 				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies",
 				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor",
-				"/sys/module/cpu_tegra/parameters/cpu_user_cap"
-				);
+				"/sys/module/cpu_tegra/parameters/cpu_user_cap",
+				"/sys/block/mmcblk0/queue/scheduler");
 	}
 
 	@Override
@@ -138,9 +135,12 @@ public class MainActivity extends FragmentActivity implements
 	{
 		Spinner governorSpinner = (Spinner) findViewById(R.id.governorSpinner);
 		Spinner frequencyCapSpinner = (Spinner) findViewById(R.id.frequencyCapSpinner);
+		Spinner ioScheluderSpinner = (Spinner) findViewById(R.id.ioSchedulerSpinner);
 		String[] governors = result[0].split(" ");
 		String[] freqencies = result[1].split(" ");
+		String[] ioScheluders = result[4].split(" ");
 		int currentFrequencyPos = freqencies.length-1;
+		int currentIOScheduler = ioScheluders.length-1;
 		for(int i = 0; i < freqencies.length; i++)
 		{
 			if(result[3].indexOf(freqencies[i]) != -1)
@@ -148,11 +148,24 @@ public class MainActivity extends FragmentActivity implements
 			freqencies[i] = freqencies[i].replaceFirst("000", "") + getResources().getString(R.string.mhz);
 		}
 		governorSpinner.setAdapter(generateAdapter(governors));
+		
 		frequencyCapSpinner.setAdapter(generateAdapter(freqencies));
 		for(int i = 0; i < governors.length; i++)
 			if(result[2].indexOf(governors[i]) != -1)
 				governorSpinner.setSelection(i);
 		frequencyCapSpinner.setSelection(currentFrequencyPos);
+		
+		for(int i = 0; i < ioScheluders.length; i++)
+		{
+			if(ioScheluders[i].charAt(0) == '[')
+			{
+				currentIOScheduler = i;	
+				ioScheluders[i] = ioScheluders[i].substring(1, ioScheluders[i].length()-1);
+			}
+		}
+		ioScheluderSpinner.setAdapter(generateAdapter(ioScheluders));
+		ioScheluderSpinner.setSelection(currentIOScheduler);
+		
 		
 	}
 	public ArrayAdapter<String> generateAdapter(String[] args)
@@ -180,7 +193,11 @@ public class MainActivity extends FragmentActivity implements
 			switch (position) {
 			case 0:
 				cpuSettingsActivity = new CPUSettingsActivity();
+				
 				return cpuSettingsActivity;
+			case 1:
+				advancedSettingsActivity = new AdvancedSettingsActivity();
+				return advancedSettingsActivity;
 			default:
 				Fragment fragment = new DummySectionFragment();
 				Bundle args = new Bundle();
@@ -194,7 +211,7 @@ public class MainActivity extends FragmentActivity implements
 		@Override
 		public int getCount() {
 			// Show 3 total pages.
-			return 3;
+			return 2;
 		}
 
 		@Override
@@ -203,8 +220,6 @@ public class MainActivity extends FragmentActivity implements
 			case 0:
 				return getString(R.string.title_cpu_section).toUpperCase();
 			case 1:
-				return getString(R.string.title_io_section).toUpperCase();
-			case 2:
 				return getString(R.string.title_advanced_section).toUpperCase();
 			}
 			return null;
