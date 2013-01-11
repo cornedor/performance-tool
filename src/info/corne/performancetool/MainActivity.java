@@ -2,7 +2,10 @@ package info.corne.performancetool;
 
 import android.app.ActionBar;
 import android.app.FragmentTransaction;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -197,12 +200,22 @@ public class MainActivity extends FragmentActivity implements
 		new SetHardwareInfoTask(this, false).execute(suspendedCapCommand);
 		String[] governorCommand = {"su", "-c", "echo " + selectedGovernor + " > /sys/devices/system/cpu/cpu[[CPU]]/cpufreq/scaling_governor"};
 		new SetHardwareInfoTask(this, true).execute(governorCommand);
+		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
+		Editor ed = pm.edit();
+		ed.putString("info.corne.performancetool.selectedFrequencyCap", selectedFrequencyCap);
+		ed.putString("info.corne.performancetool.selectedGovernor", selectedGovernor);
+		ed.putString("info.corne.performancetool.selectedSuspendedCap", selectedSuspendedCap);
+		ed.commit();
 	}
 	public void applyAdvancedSettings(View button)
 	{
 		String selectedScheduler = (String)(((Spinner) findViewById(R.id.ioSchedulerSpinner)).getSelectedItem());
 		String[] schedulerCommand = {"su", "-c", "echo \"" + selectedScheduler + "\" > /sys/block/mmcblk0/queue/scheduler" };
 		new SetHardwareInfoTask(this, false).execute(schedulerCommand);
+		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
+		Editor ed = pm.edit();
+		ed.putString("info.corne.performancetool.selectedScheduler", selectedScheduler);
+		ed.commit();
 	}
 	public ArrayAdapter<String> generateAdapter(String[] args)
 	{

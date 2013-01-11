@@ -17,6 +17,7 @@
     <string name="please_wait">Please wait&#8230;</string>
     <string name="being_saved">Settings are being saved.</string>
     <string name="gathering_info">Gathering some info.</string>
+    <string name="on_boot">On boot</string>
     
 
 </resources>
