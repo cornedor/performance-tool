@@ -107,7 +107,8 @@ public class MainActivity extends FragmentActivity implements
 				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies",
 				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor",
 				"/sys/module/cpu_tegra/parameters/cpu_user_cap",
-				"/sys/block/mmcblk0/queue/scheduler");
+				"/sys/block/mmcblk0/queue/scheduler",
+				"/sys/htc/suspend_freq");
 	}
 
 	@Override
@@ -140,8 +141,10 @@ public class MainActivity extends FragmentActivity implements
 		Spinner governorSpinner = (Spinner) findViewById(R.id.governorSpinner);
 		Spinner frequencyCapSpinner = (Spinner) findViewById(R.id.frequencyCapSpinner);
 		Spinner ioSchedulerSpinner = (Spinner) findViewById(R.id.ioSchedulerSpinner);
+		Spinner suspendedSpinner = (Spinner) findViewById(R.id.suspendedSpinner);
 		String[] governors = result[0].split(" ");
 		String[] freqencies = result[1].split(" ");
+		String[] freqenciesShort = new String[freqencies.length];
 		ioSchedulers = result[4].split(" ");
 		int currentFrequencyPos = freqencies.length-1;
 		int currentIOScheduler = ioSchedulers.length-1;
@@ -150,18 +153,21 @@ public class MainActivity extends FragmentActivity implements
 			
 			if(result[3].indexOf(freqencies[i]) != -1)
 				currentFrequencyPos = i;
-			freqencies[i] = freqencies[i].replaceFirst("000", "") + getResources().getString(R.string.mhz);
+			freqenciesShort[i] = freqencies[i].replaceFirst("000", "") + getResources().getString(R.string.mhz);
 			
 		}
 		governorSpinner.setAdapter(generateAdapter(governors));
 		
-		frequencyCapSpinner.setAdapter(generateAdapter(freqencies));
+		
+		frequencyCapSpinner.setAdapter(generateAdapter(freqenciesShort));
+		suspendedSpinner.setAdapter(generateAdapter(freqenciesShort));
 		for(int i = 0; i < governors.length; i++)
 		{
 			if(result[2].indexOf(governors[i]) != -1)
 				governorSpinner.setSelection(i);
 		}
 		frequencyCapSpinner.setSelection(currentFrequencyPos);
+		
 		
 		for(int i = 0; i < ioSchedulers.length; i++)
 		{
@@ -173,13 +179,22 @@ public class MainActivity extends FragmentActivity implements
 		}
 		ioSchedulerSpinner.setAdapter(generateAdapter(ioSchedulers));
 		ioSchedulerSpinner.setSelection(currentIOScheduler);
+		
+		for(int i = 0; i < freqencies.length; i++)
+		{
+			if(result[5].indexOf(freqencies[i]) != -1)
+				suspendedSpinner.setSelection(i);
+		}
 	}
 	public void applyCpuSettings(View button)
 	{
 		String selectedFrequencyCap = (String)(((Spinner) findViewById(R.id.frequencyCapSpinner)).getSelectedItem());
 		String selectedGovernor = (String)(((Spinner) findViewById(R.id.governorSpinner)).getSelectedItem());
+		String selectedSuspendedCap = (String)(((Spinner) findViewById(R.id.suspendedSpinner)).getSelectedItem());
 		String[] frequencyCommand = {"su", "-c", "echo " + selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000") + " > /sys/module/cpu_tegra/parameters/cpu_user_cap"};
+		String[] suspendedCapCommand = {"su", "-c", "echo " + selectedSuspendedCap.replace(getResources().getString(R.string.mhz), "000") + " > /sys/htc/suspend_freq"};
 		new SetHardwareInfoTask(this, false).execute(frequencyCommand);
+		new SetHardwareInfoTask(this, false).execute(suspendedCapCommand);
 		String[] governorCommand = {"su", "-c", "echo " + selectedGovernor + " > /sys/devices/system/cpu/cpu[[CPU]]/cpufreq/scaling_governor"};
 		new SetHardwareInfoTask(this, true).execute(governorCommand);
 	}

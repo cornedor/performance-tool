@@ -8,6 +8,7 @@
     <string name="hello_world">Hello world!</string>
     <string name="menu_settings">Settings</string>
     <string name="cpu_cap">Frequency cap</string>
+    <string name="suspended_cpu_cap">Frequency cap when phone is suspended</string>
     <string name="governor">Governor</string>
     <string name="apply">Apply</string>
     <string name="menu_refresh">Refresh</string>
