@@ -13,5 +13,9 @@
     <string name="menu_refresh">Refresh</string>
     <string name="mhz">MHz</string>
     <string name="io_scheduler">Change IO scheduler</string>
+    <string name="please_wait">Please wait&#8230;</string>
+    <string name="being_saved">Settings are being saved.</string>
+    <string name="gathering_info">Gathering some info.</string>
+    
 
 </resources>

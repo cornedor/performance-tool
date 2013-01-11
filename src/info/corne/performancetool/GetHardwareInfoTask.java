@@ -18,7 +18,7 @@ public class GetHardwareInfoTask extends AsyncTask<String, Void, Void>{
 	{
 		this.main = main;
 		this.fragment = fragment;
-		dialog = ProgressDialog.show(main, "Please wait...", "Gathering some info.");
+		dialog = ProgressDialog.show(main, main.getResources().getString(R.string.please_wait), main.getResources().getString(R.string.gathering_info));
 	}
 	
 	@Override
