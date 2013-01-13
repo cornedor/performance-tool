@@ -23,6 +23,7 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,6 +43,12 @@ public class MainActivity extends FragmentActivity implements
 	AdvancedSettingsActivity advancedSettingsActivity;
 	String[] hardwareInfo;
 	String[] ioSchedulers;
+	
+	static String SELECTED_FREQ_SETTING = "info.corne.performancetool.selectedFrequencyCap";
+	static String SELECTED_GOV_SETTING = "info.corne.performancetool.selectedGovernor";
+	static String SELECTED_SUSPENDED_FREQ_SETTINGS = "info.corne.performancetool.selectedSuspendedCap";
+	static String SET_ON_BOOT_SETTING = "info.corne.performancetool.setOnBootSetting";
+	static String SELECTED_SCHEDULER_SETTING = "info.corne.performancetool.selectedScheduler";
 
 	/**
 	 * The {@link ViewPager} that will host the section contents.
@@ -66,6 +73,7 @@ public class MainActivity extends FragmentActivity implements
 		// Set up the ViewPager with the sections adapter.
 		mViewPager = (ViewPager) findViewById(R.id.pager);
 		mViewPager.setAdapter(mSectionsPagerAdapter);
+		mViewPager.setOffscreenPageLimit(3);
 
 		// When swiping between different sections, select the corresponding
 		// tab. We can also use ActionBar.Tab#select() to do this if we have
@@ -157,7 +165,6 @@ public class MainActivity extends FragmentActivity implements
 			if(result[3].indexOf(freqencies[i]) != -1)
 				currentFrequencyPos = i;
 			freqenciesShort[i] = freqencies[i].replaceFirst("000", "") + getResources().getString(R.string.mhz);
-			
 		}
 		governorSpinner.setAdapter(generateAdapter(governors));
 		
@@ -188,12 +195,16 @@ public class MainActivity extends FragmentActivity implements
 			if(result[5].indexOf(freqencies[i]) != -1)
 				suspendedSpinner.setSelection(i);
 		}
+		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		
+		((Switch) findViewById(R.id.setCpuSettingsOnBootSwitch)).setChecked(pm.getBoolean(SET_ON_BOOT_SETTING, false));
 	}
 	public void applyCpuSettings(View button)
 	{
 		String selectedFrequencyCap = (String)(((Spinner) findViewById(R.id.frequencyCapSpinner)).getSelectedItem());
 		String selectedGovernor = (String)(((Spinner) findViewById(R.id.governorSpinner)).getSelectedItem());
 		String selectedSuspendedCap = (String)(((Spinner) findViewById(R.id.suspendedSpinner)).getSelectedItem());
+		Boolean onBootEnabled = (Boolean)(((Switch) findViewById(R.id.setCpuSettingsOnBootSwitch)).isChecked());
 		String[] frequencyCommand = {"su", "-c", "echo " + selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000") + " > /sys/module/cpu_tegra/parameters/cpu_user_cap"};
 		String[] suspendedCapCommand = {"su", "-c", "echo " + selectedSuspendedCap.replace(getResources().getString(R.string.mhz), "000") + " > /sys/htc/suspend_freq"};
 		new SetHardwareInfoTask(this, false).execute(frequencyCommand);
@@ -202,9 +213,11 @@ public class MainActivity extends FragmentActivity implements
 		new SetHardwareInfoTask(this, true).execute(governorCommand);
 		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
 		Editor ed = pm.edit();
-		ed.putString("info.corne.performancetool.selectedFrequencyCap", selectedFrequencyCap);
-		ed.putString("info.corne.performancetool.selectedGovernor", selectedGovernor);
-		ed.putString("info.corne.performancetool.selectedSuspendedCap", selectedSuspendedCap);
+		System.out.println(pm.getAll().toString());
+		ed.putString(SELECTED_FREQ_SETTING, selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000"));
+		ed.putString(SELECTED_GOV_SETTING, selectedGovernor);
+		ed.putString(SELECTED_SUSPENDED_FREQ_SETTINGS, selectedSuspendedCap.replace(getResources().getString(R.string.mhz), "000"));
+		ed.putBoolean(SET_ON_BOOT_SETTING, onBootEnabled);
 		ed.commit();
 	}
 	public void applyAdvancedSettings(View button)
@@ -214,7 +227,7 @@ public class MainActivity extends FragmentActivity implements
 		new SetHardwareInfoTask(this, false).execute(schedulerCommand);
 		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
 		Editor ed = pm.edit();
-		ed.putString("info.corne.performancetool.selectedScheduler", selectedScheduler);
+		ed.putString(SELECTED_SCHEDULER_SETTING, selectedScheduler);
 		ed.commit();
 	}
 	public ArrayAdapter<String> generateAdapter(String[] args)
@@ -240,11 +253,10 @@ public class MainActivity extends FragmentActivity implements
 			// Return a DummySectionFragment (defined as a static inner class
 			// below) with the page number as its lone argument.
 			switch (position) {
-			case 0:
-				cpuSettingsActivity = new CPUSettingsActivity();
-				
-				return cpuSettingsActivity;
 			case 1:
+				cpuSettingsActivity = new CPUSettingsActivity();
+				return cpuSettingsActivity;
+			case 2:
 				advancedSettingsActivity = new AdvancedSettingsActivity();
 				return advancedSettingsActivity;
 			default:
@@ -260,15 +272,17 @@ public class MainActivity extends FragmentActivity implements
 		@Override
 		public int getCount() {
 			// Show 3 total pages.
-			return 2;
+			return 3;
 		}
 
 		@Override
 		public CharSequence getPageTitle(int position) {
 			switch (position) {
 			case 0:
-				return getString(R.string.title_cpu_section).toUpperCase();
+				return getString(R.string.title_profiles_section).toUpperCase();
 			case 1:
+				return getString(R.string.title_cpu_section).toUpperCase();
+			case 2:
 				return getString(R.string.title_advanced_section).toUpperCase();
 			}
 			return null;

@@ -25,6 +25,12 @@ public class SetHardwareInfoTask extends AsyncTask<String[], Void, Void>{
 		this.allCpus = allCpus;
 		this.main = main;
 	}
+	public SetHardwareInfoTask(boolean allCpus)
+	{
+		this.allCpus = allCpus;
+		this.main = null;
+		this.dialog = null;
+	}
 	@Override
 	protected Void doInBackground(String[]... params) {
 		for(int i = 0; i < params.length; i++)
@@ -47,6 +53,7 @@ public class SetHardwareInfoTask extends AsyncTask<String[], Void, Void>{
 					while(done < 3)
 					{
 						done++;
+						
 						String result = ShellCommand.run(command);
 						// if the message is longer than 1 character than there
 						// is probably an error thrown and should all the CPU
@@ -77,7 +84,7 @@ public class SetHardwareInfoTask extends AsyncTask<String[], Void, Void>{
 	@Override
 	protected void onPostExecute(Void res)
 	{
-		dialog.dismiss();
+		if(dialog != null) dialog.dismiss();
 	}
 
 }

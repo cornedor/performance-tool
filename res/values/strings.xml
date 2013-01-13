@@ -18,6 +18,7 @@
     <string name="being_saved">Settings are being saved.</string>
     <string name="gathering_info">Gathering some info.</string>
     <string name="on_boot">On boot</string>
+    <string name="title_profiles_section">Profiles</string>
     
 
 </resources>
