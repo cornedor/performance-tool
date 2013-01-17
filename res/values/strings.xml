@@ -19,6 +19,10 @@
     <string name="gathering_info">Gathering some info.</string>
     <string name="on_boot">On boot</string>
     <string name="title_profiles_section">Profiles</string>
+	<string name="allow_overclock">Allow Overclocking</string>
+	<string name="allow_overclock_off">(Max: 1x1.7GHz, 3x1.6GHz)</string>
+	<string name="allow_overclock_on">(Max: 4x1.7GHz)</string>  
+
     
 
 </resources>

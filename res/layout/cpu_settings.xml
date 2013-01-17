@@ -38,6 +38,19 @@
         android:layout_height="wrap_content" />
 
     <Switch
+        android:id="@+id/overclockSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onOverclockSwitchClick"
+        android:text="@string/allow_overclock" />
+
+    <TextView
+        android:id="@+id/overclockInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/allow_overclock_off" />
+
+    <Switch
         android:id="@+id/setCpuSettingsOnBootSwitch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

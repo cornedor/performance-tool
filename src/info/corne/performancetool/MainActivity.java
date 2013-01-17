@@ -119,7 +119,8 @@ public class MainActivity extends FragmentActivity implements
 				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor",
 				"/sys/module/cpu_tegra/parameters/cpu_user_cap",
 				"/sys/block/mmcblk0/queue/scheduler",
-				"/sys/htc/suspend_freq");
+				"/sys/htc/suspend_freq",
+				"/sys/module/cpu_tegra/parameters/enable_oc");
 	}
 
 	@Override
@@ -153,6 +154,7 @@ public class MainActivity extends FragmentActivity implements
 		Spinner frequencyCapSpinner = (Spinner) findViewById(R.id.frequencyCapSpinner);
 		Spinner ioSchedulerSpinner = (Spinner) findViewById(R.id.ioSchedulerSpinner);
 		Spinner suspendedSpinner = (Spinner) findViewById(R.id.suspendedSpinner);
+		Switch ocSwitch = (Switch) findViewById(R.id.overclockSwitch);
 		String[] governors = result[0].split(" ");
 		String[] freqencies = result[1].split(" ");
 		String[] freqenciesShort = new String[freqencies.length];
@@ -195,9 +197,24 @@ public class MainActivity extends FragmentActivity implements
 			if(result[5].indexOf(freqencies[i]) != -1)
 				suspendedSpinner.setSelection(i);
 		}
+		if(result[6].indexOf('1') != -1)
+		{
+			ocSwitch.setChecked(true);
+			onOverclockSwitchClick(ocSwitch);
+		}
 		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		
 		((Switch) findViewById(R.id.setCpuSettingsOnBootSwitch)).setChecked(pm.getBoolean(SET_ON_BOOT_SETTING, false));
+	}
+	public void onOverclockSwitchClick(View view)
+	{
+		Switch ocSwitch = (Switch) view;
+		TextView overclockInfo = (TextView) findViewById(R.id.overclockInfo);
+		if(ocSwitch.isChecked())
+			overclockInfo.setText(getResources().getString(R.string.allow_overclock_on));
+		else 
+			overclockInfo.setText(getResources().getString(R.string.allow_overclock_off));
+		
 	}
 	public void applyCpuSettings(View button)
 	{
