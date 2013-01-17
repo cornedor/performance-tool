@@ -18,7 +18,7 @@ public class GetHardwareInfoTask extends AsyncTask<String, Void, Void>{
 	{
 		this.main = main;
 		this.fragment = fragment;
-		dialog = ProgressDialog.show(main, main.getResources().getString(R.string.please_wait), main.getResources().getString(R.string.gathering_info));
+		//dialog = ProgressDialog.show(main, main.getResources().getString(R.string.please_wait), main.getResources().getString(R.string.gathering_info));
 	}
 	
 	@Override
@@ -40,6 +40,7 @@ public class GetHardwareInfoTask extends AsyncTask<String, Void, Void>{
 				
 			} catch (IOException e) {
 				e.printStackTrace();
+				content.append("Error\n");
 			}
 			content.deleteCharAt(content.length()-1);
 			result[i] = content.toString();
@@ -51,7 +52,7 @@ public class GetHardwareInfoTask extends AsyncTask<String, Void, Void>{
 	protected void onPostExecute(Void res)
 	{
 		main.hardwareInfoLoaded(result, fragment);
-		dialog.dismiss();
+		//dialog.dismiss();
 	}
 
 	
