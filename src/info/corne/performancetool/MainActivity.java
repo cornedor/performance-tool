@@ -70,7 +70,6 @@ public class MainActivity extends FragmentActivity implements
 	
 	static String SELECTED_FREQ_SETTING = "info.corne.performancetool.selectedFrequencyCap";
 	static String SELECTED_GOV_SETTING = "info.corne.performancetool.selectedGovernor";
-	static String SELECTED_SUSPENDED_FREQ_SETTINGS = "info.corne.performancetool.selectedSuspendedCap";
 	static String SET_ON_BOOT_SETTING = "info.corne.performancetool.setOnBootSetting";
 	static String SELECTED_SCHEDULER_SETTING = "info.corne.performancetool.selectedScheduler";
 	static String OC_ENABLED = "info.corne.performancetool.overclockEnabled";
@@ -145,7 +144,6 @@ public class MainActivity extends FragmentActivity implements
 				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor",
 				"/sys/module/cpu_tegra/parameters/cpu_user_cap",
 				"/sys/block/mmcblk0/queue/scheduler",
-				"/sys/htc/suspend_freq",
 				"/sys/module/cpu_tegra/parameters/enable_oc");
 	}
 
@@ -179,7 +177,6 @@ public class MainActivity extends FragmentActivity implements
 		Spinner governorSpinner = (Spinner) findViewById(R.id.governorSpinner);
 		Spinner frequencyCapSpinner = (Spinner) findViewById(R.id.frequencyCapSpinner);
 		Spinner ioSchedulerSpinner = (Spinner) findViewById(R.id.ioSchedulerSpinner);
-		Spinner suspendedSpinner = (Spinner) findViewById(R.id.suspendedSpinner);
 		Switch ocSwitch = (Switch) findViewById(R.id.overclockSwitch);
 		String[] governors = result[0].split(" ");
 		String[] freqencies = result[1].split(" ");
@@ -198,7 +195,6 @@ public class MainActivity extends FragmentActivity implements
 		
 		
 		frequencyCapSpinner.setAdapter(generateAdapter(freqenciesShort));
-		suspendedSpinner.setAdapter(generateAdapter(freqenciesShort));
 		for(int i = 0; i < governors.length; i++)
 		{
 			if(result[2].indexOf(governors[i]) != -1)
@@ -218,12 +214,7 @@ public class MainActivity extends FragmentActivity implements
 		ioSchedulerSpinner.setAdapter(generateAdapter(ioSchedulers));
 		ioSchedulerSpinner.setSelection(currentIOScheduler);
 		
-		for(int i = 0; i < freqencies.length; i++)
-		{
-			if(result[5].indexOf(freqencies[i]) != -1)
-				suspendedSpinner.setSelection(i);
-		}
-		if(result[6].indexOf('1') != -1)
+		if(result[5].indexOf('1') != -1)
 		{
 			ocSwitch.setChecked(true);
 			onOverclockSwitchClick(ocSwitch);
@@ -248,20 +239,17 @@ public class MainActivity extends FragmentActivity implements
 		dialog = ProgressDialog.show(this, getResources().getString(R.string.please_wait), getResources().getString(R.string.being_saved));
 		String selectedFrequencyCap = (String)(((Spinner) findViewById(R.id.frequencyCapSpinner)).getSelectedItem());
 		String selectedGovernor = (String)(((Spinner) findViewById(R.id.governorSpinner)).getSelectedItem());
-		String selectedSuspendedCap = (String)(((Spinner) findViewById(R.id.suspendedSpinner)).getSelectedItem());
 		Boolean onBootEnabled = (Boolean)(((Switch) findViewById(R.id.setCpuSettingsOnBootSwitch)).isChecked());
 		int ocEnabled = 0;
 		if(((Switch)findViewById(R.id.overclockSwitch)).isChecked()) ocEnabled = 1;
 		
 		String[] files = {
 				"/sys/module/cpu_tegra/parameters/cpu_user_cap",
-				"/sys/htc/suspend_freq",
 				"/sys/module/cpu_tegra/parameters/enable_oc",
 				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor",				
 		};
 		String[] values = {
 				selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000"),
-				selectedSuspendedCap.replace(getResources().getString(R.string.mhz), "000"),
 				"" + ocEnabled,
 				selectedGovernor
 		};
@@ -271,7 +259,6 @@ public class MainActivity extends FragmentActivity implements
 		System.out.println(pm.getAll().toString());
 		ed.putString(SELECTED_FREQ_SETTING, selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000"));
 		ed.putString(SELECTED_GOV_SETTING, selectedGovernor);
-		ed.putString(SELECTED_SUSPENDED_FREQ_SETTINGS, selectedSuspendedCap.replace(getResources().getString(R.string.mhz), "000"));
 		ed.putBoolean(SET_ON_BOOT_SETTING, onBootEnabled);
 		ed.putInt(OC_ENABLED, ocEnabled);
 		ed.commit();
