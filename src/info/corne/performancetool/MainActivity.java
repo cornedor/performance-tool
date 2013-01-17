@@ -298,10 +298,10 @@ public class MainActivity extends FragmentActivity implements
 			// Return a DummySectionFragment (defined as a static inner class
 			// below) with the page number as its lone argument.
 			switch (position) {
-			case 1:
+			case 0:
 				cpuSettingsActivity = new CPUSettingsActivity();
 				return cpuSettingsActivity;
-			case 2:
+			case 1:
 				advancedSettingsActivity = new AdvancedSettingsActivity();
 				return advancedSettingsActivity;
 			default:
@@ -317,7 +317,7 @@ public class MainActivity extends FragmentActivity implements
 		@Override
 		public int getCount() {
 			// Show 3 total pages.
-			return 3;
+			return 2;
 		}
 
 		@Override
