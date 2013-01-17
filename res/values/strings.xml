@@ -22,6 +22,7 @@
 	<string name="allow_overclock">Allow Overclocking</string>
 	<string name="allow_overclock_off">(Max: 1x1.7GHz, 3x1.6GHz)</string>
 	<string name="allow_overclock_on">(Max: 4x1.7GHz)</string>  
+	<string name="add">Add</string>
 
     
 

@@ -64,6 +64,7 @@ public class MainActivity extends FragmentActivity implements
 	SectionsPagerAdapter mSectionsPagerAdapter;
 	CPUSettingsActivity cpuSettingsActivity;
 	AdvancedSettingsActivity advancedSettingsActivity;
+	ProfilesActivity profilesActivity;
 	ProgressDialog dialog;
 	String[] hardwareInfo;
 	String[] ioSchedulers;
@@ -316,9 +317,12 @@ public class MainActivity extends FragmentActivity implements
 			// below) with the page number as its lone argument.
 			switch (position) {
 			case 0:
+				profilesActivity = new ProfilesActivity();
+				return profilesActivity;
+			case 1:
 				cpuSettingsActivity = new CPUSettingsActivity();
 				return cpuSettingsActivity;
-			case 1:
+			case 2:
 				advancedSettingsActivity = new AdvancedSettingsActivity();
 				return advancedSettingsActivity;
 			default:
@@ -334,7 +338,7 @@ public class MainActivity extends FragmentActivity implements
 		@Override
 		public int getCount() {
 			// Show 3 total pages.
-			return 2;
+			return 3;
 		}
 
 		@Override
