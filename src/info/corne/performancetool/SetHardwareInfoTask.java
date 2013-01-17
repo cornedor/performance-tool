@@ -6,6 +6,11 @@ import android.app.ProgressDialog;
 import android.os.AsyncTask;
 /**
  * Using this class commands to save the settings can be run.
+ * 
+ * Copyright (C) 2013  Corné Dorrestijn
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
  * @author Corné Dorrestijn
  *
  */

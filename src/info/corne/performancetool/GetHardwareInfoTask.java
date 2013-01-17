@@ -7,7 +7,17 @@ import java.io.IOException;
 
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
-
+/**
+ * This class will read files etc. to get all
+ * all the info needed. This will be done in threads.
+ * 
+ * Copyright (C) 2013  Corné Dorrestijn
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ * @author Corné Dorrestijn
+ *
+ */
 public class GetHardwareInfoTask extends AsyncTask<String, Void, Void>{
 
 	private MainActivity main;
