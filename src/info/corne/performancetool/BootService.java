@@ -35,17 +35,19 @@ public class BootService extends Service{
 				String selectedSuspendedCap = sharedPreferences.getString(MainActivity.SELECTED_SUSPENDED_FREQ_SETTINGS, "0");
 				String selectedGovernor = sharedPreferences.getString(MainActivity.SELECTED_GOV_SETTING, "Undefined");
 				String selectedScheduler = sharedPreferences.getString(MainActivity.SELECTED_SCHEDULER_SETTING, "Undefined");
+				int ocEnabled = sharedPreferences.getInt(MainActivity.OC_ENABLED, 0);
 				
 				String[] frequencyCommand = {"su", "-c", "echo " + selectedFrequencyCap + " > /sys/module/cpu_tegra/parameters/cpu_user_cap"};
 				String[] suspendedCommand = {"su", "-c", "echo " + selectedSuspendedCap + " > /sys/module/cpu_tegra/parameters/cpu_user_cap"};
 				String[] schedulerCommand = {"su", "-c", "echo " + selectedScheduler + " > /sys/block/mmcblk0/queue/scheduler" };
+				String[] governorCommand = {"su", "-c", "echo " + selectedGovernor + " > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"};
+				String[] ocCommand = {"su", "-c", "echo " + ocEnabled + " > /sys/module/cpu_tegra/parameters/enable_oc"};
 				
 				ShellCommand.run(frequencyCommand);
 				ShellCommand.run(suspendedCommand);
 				ShellCommand.run(schedulerCommand);
-				
-				String[] governorCommand = {"su", "-c", "echo " + selectedGovernor + " > /sys/devices/system/cpu/cpu[[CPU]]/cpufreq/scaling_governor"};
-				new SetHardwareInfoTask(true).execute(governorCommand);
+				ShellCommand.run(ocCommand);
+				ShellCommand.run(governorCommand);
 			}
 			return null;
 		}

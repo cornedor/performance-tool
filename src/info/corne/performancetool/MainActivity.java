@@ -49,6 +49,7 @@ public class MainActivity extends FragmentActivity implements
 	static String SELECTED_SUSPENDED_FREQ_SETTINGS = "info.corne.performancetool.selectedSuspendedCap";
 	static String SET_ON_BOOT_SETTING = "info.corne.performancetool.setOnBootSetting";
 	static String SELECTED_SCHEDULER_SETTING = "info.corne.performancetool.selectedScheduler";
+	static String OC_ENABLED = "info.corne.performancetool.overclockEnabled";
 
 	/**
 	 * The {@link ViewPager} that will host the section contents.
@@ -222,12 +223,16 @@ public class MainActivity extends FragmentActivity implements
 		String selectedGovernor = (String)(((Spinner) findViewById(R.id.governorSpinner)).getSelectedItem());
 		String selectedSuspendedCap = (String)(((Spinner) findViewById(R.id.suspendedSpinner)).getSelectedItem());
 		Boolean onBootEnabled = (Boolean)(((Switch) findViewById(R.id.setCpuSettingsOnBootSwitch)).isChecked());
+		int ocEnabled = 0;
+		if(((Switch)findViewById(R.id.overclockSwitch)).isChecked()) ocEnabled = 1;
 		String[] frequencyCommand = {"su", "-c", "echo " + selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000") + " > /sys/module/cpu_tegra/parameters/cpu_user_cap"};
 		String[] suspendedCapCommand = {"su", "-c", "echo " + selectedSuspendedCap.replace(getResources().getString(R.string.mhz), "000") + " > /sys/htc/suspend_freq"};
+		String[] ocCommand = {"su", "-c", "echo " + ocEnabled + " > /sys/module/cpu_tegra/parameters/enable_oc"};
+		String[] governorCommand = {"su", "-c", "echo " + selectedGovernor + " > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"};
 		new SetHardwareInfoTask(this, false).execute(frequencyCommand);
 		new SetHardwareInfoTask(this, false).execute(suspendedCapCommand);
-		String[] governorCommand = {"su", "-c", "echo " + selectedGovernor + " > /sys/devices/system/cpu/cpu[[CPU]]/cpufreq/scaling_governor"};
-		new SetHardwareInfoTask(this, true).execute(governorCommand);
+		new SetHardwareInfoTask(this, false).execute(ocCommand);
+		new SetHardwareInfoTask(this, false).execute(governorCommand);
 		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
 		Editor ed = pm.edit();
 		System.out.println(pm.getAll().toString());
@@ -235,6 +240,7 @@ public class MainActivity extends FragmentActivity implements
 		ed.putString(SELECTED_GOV_SETTING, selectedGovernor);
 		ed.putString(SELECTED_SUSPENDED_FREQ_SETTINGS, selectedSuspendedCap.replace(getResources().getString(R.string.mhz), "000"));
 		ed.putBoolean(SET_ON_BOOT_SETTING, onBootEnabled);
+		ed.putInt(OC_ENABLED, ocEnabled);
 		ed.commit();
 	}
 	public void applyAdvancedSettings(View button)
