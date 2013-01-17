@@ -21,14 +21,12 @@ import android.os.AsyncTask;
 public class GetHardwareInfoTask extends AsyncTask<String, Void, Void>{
 
 	private MainActivity main;
-	private ProgressDialog dialog;
 	private String[] result;
 	int fragment;
 	public GetHardwareInfoTask(MainActivity main, int fragment)
 	{
 		this.main = main;
 		this.fragment = fragment;
-		//dialog = ProgressDialog.show(main, main.getResources().getString(R.string.please_wait), main.getResources().getString(R.string.gathering_info));
 	}
 	
 	@Override
@@ -62,7 +60,6 @@ public class GetHardwareInfoTask extends AsyncTask<String, Void, Void>{
 	protected void onPostExecute(Void res)
 	{
 		main.hardwareInfoLoaded(result, fragment);
-		//dialog.dismiss();
 	}
 
 	

@@ -2,6 +2,7 @@ package info.corne.performancetool;
 
 import android.app.ActionBar;
 import android.app.FragmentTransaction;
+import android.app.ProgressDialog;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
@@ -63,6 +64,7 @@ public class MainActivity extends FragmentActivity implements
 	SectionsPagerAdapter mSectionsPagerAdapter;
 	CPUSettingsActivity cpuSettingsActivity;
 	AdvancedSettingsActivity advancedSettingsActivity;
+	ProgressDialog dialog;
 	String[] hardwareInfo;
 	String[] ioSchedulers;
 	
@@ -136,6 +138,7 @@ public class MainActivity extends FragmentActivity implements
 	}
 	public void getHardwareInfo(int fragment)
 	{
+		dialog = ProgressDialog.show(this, getResources().getString(R.string.please_wait), getResources().getString(R.string.gathering_info));
 		new GetHardwareInfoTask(this, fragment).execute(
 				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors",
 				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies",
@@ -228,6 +231,7 @@ public class MainActivity extends FragmentActivity implements
 		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		
 		((Switch) findViewById(R.id.setCpuSettingsOnBootSwitch)).setChecked(pm.getBoolean(SET_ON_BOOT_SETTING, false));
+		dialog.dismiss();
 	}
 	public void onOverclockSwitchClick(View view)
 	{
@@ -241,20 +245,27 @@ public class MainActivity extends FragmentActivity implements
 	}
 	public void applyCpuSettings(View button)
 	{
+		dialog = ProgressDialog.show(this, getResources().getString(R.string.please_wait), getResources().getString(R.string.being_saved));
 		String selectedFrequencyCap = (String)(((Spinner) findViewById(R.id.frequencyCapSpinner)).getSelectedItem());
 		String selectedGovernor = (String)(((Spinner) findViewById(R.id.governorSpinner)).getSelectedItem());
 		String selectedSuspendedCap = (String)(((Spinner) findViewById(R.id.suspendedSpinner)).getSelectedItem());
 		Boolean onBootEnabled = (Boolean)(((Switch) findViewById(R.id.setCpuSettingsOnBootSwitch)).isChecked());
 		int ocEnabled = 0;
 		if(((Switch)findViewById(R.id.overclockSwitch)).isChecked()) ocEnabled = 1;
-		String[] frequencyCommand = {"su", "-c", "echo " + selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000") + " > /sys/module/cpu_tegra/parameters/cpu_user_cap"};
-		String[] suspendedCapCommand = {"su", "-c", "echo " + selectedSuspendedCap.replace(getResources().getString(R.string.mhz), "000") + " > /sys/htc/suspend_freq"};
-		String[] ocCommand = {"su", "-c", "echo " + ocEnabled + " > /sys/module/cpu_tegra/parameters/enable_oc"};
-		String[] governorCommand = {"su", "-c", "echo " + selectedGovernor + " > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"};
-		new SetHardwareInfoTask(this, false).execute(frequencyCommand);
-		new SetHardwareInfoTask(this, false).execute(suspendedCapCommand);
-		new SetHardwareInfoTask(this, false).execute(ocCommand);
-		new SetHardwareInfoTask(this, false).execute(governorCommand);
+		
+		String[] files = {
+				"/sys/module/cpu_tegra/parameters/cpu_user_cap",
+				"/sys/htc/suspend_freq",
+				"/sys/module/cpu_tegra/parameters/enable_oc",
+				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor",				
+		};
+		String[] values = {
+				selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000"),
+				selectedSuspendedCap.replace(getResources().getString(R.string.mhz), "000"),
+				"" + ocEnabled,
+				selectedGovernor
+		};
+		new SetHardwareInfoTask(files, values, dialog).execute();
 		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
 		Editor ed = pm.edit();
 		System.out.println(pm.getAll().toString());
@@ -267,9 +278,15 @@ public class MainActivity extends FragmentActivity implements
 	}
 	public void applyAdvancedSettings(View button)
 	{
+		dialog = ProgressDialog.show(this, getResources().getString(R.string.please_wait), getResources().getString(R.string.being_saved));
 		String selectedScheduler = (String)(((Spinner) findViewById(R.id.ioSchedulerSpinner)).getSelectedItem());
-		String[] schedulerCommand = {"su", "-c", "echo \"" + selectedScheduler + "\" > /sys/block/mmcblk0/queue/scheduler" };
-		new SetHardwareInfoTask(this, false).execute(schedulerCommand);
+		String[] values = {
+				selectedScheduler
+		};
+		String[] files = {
+				"/sys/block/mmcblk0/queue/scheduler"
+		};
+		new SetHardwareInfoTask(values, files, dialog).execute();
 		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
 		Editor ed = pm.edit();
 		ed.putString(SELECTED_SCHEDULER_SETTING, selectedScheduler);
