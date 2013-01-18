@@ -1,6 +1,9 @@
 package info.corne.performancetool;
 
+import java.util.Locale;
+
 import android.app.ActionBar;
+import android.app.AlertDialog;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.content.SharedPreferences;
@@ -17,16 +20,11 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
 /**
  * The main class. This will load all the current settings and
  * add them to the interface. It also controls all interaction
@@ -71,7 +69,6 @@ public class MainActivity extends FragmentActivity implements
 	
 	static String SELECTED_FREQ_SETTING = "info.corne.performancetool.selectedFrequencyCap";
 	static String SELECTED_GOV_SETTING = "info.corne.performancetool.selectedGovernor";
-	static String SELECTED_SUSPENDED_FREQ_SETTINGS = "info.corne.performancetool.selectedSuspendedCap";
 	static String SET_ON_BOOT_SETTING = "info.corne.performancetool.setOnBootSetting";
 	static String SELECTED_SCHEDULER_SETTING = "info.corne.performancetool.selectedScheduler";
 	static String OC_ENABLED = "info.corne.performancetool.overclockEnabled";
@@ -122,7 +119,7 @@ public class MainActivity extends FragmentActivity implements
 					.setText(mSectionsPagerAdapter.getPageTitle(i))
 					.setTabListener(this));
 		}
-		getHardwareInfo(0);
+		getHardwareInfo();
 		
 	}
 	@Override
@@ -130,23 +127,34 @@ public class MainActivity extends FragmentActivity implements
 	{
 		switch (menu.getItemId()) {
 		case R.id.menu_refresh:
-			getHardwareInfo(0);
+			getHardwareInfo();
+			return true;
+		case R.id.menu_about:
+			// Show the about dialog.
+			AlertDialog aboutDialog = new AlertDialog.Builder(this).create();
+			aboutDialog.setTitle("About");
+			aboutDialog.setMessage(getResources().getString(R.string.about_info));
+			aboutDialog.setIcon(R.drawable.ic_launcher);
+			aboutDialog.show();
 			return true;
 		default:
 			return super.onOptionsItemSelected(menu);
 		}
 		
 	}
-	public void getHardwareInfo(int fragment)
+	/**
+	 * This function will show a progress dialog and wil start a thread
+	 * that will get all the required hardware info.
+	 */
+	public void getHardwareInfo()
 	{
 		dialog = ProgressDialog.show(this, getResources().getString(R.string.please_wait), getResources().getString(R.string.gathering_info));
-		new GetHardwareInfoTask(this, fragment).execute(
+		new GetHardwareInfoTask(this).execute(
 				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors",
 				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies",
 				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor",
 				"/sys/module/cpu_tegra/parameters/cpu_user_cap",
 				"/sys/block/mmcblk0/queue/scheduler",
-				"/sys/htc/suspend_freq",
 				"/sys/module/cpu_tegra/parameters/enable_oc");
 	}
 
@@ -174,20 +182,27 @@ public class MainActivity extends FragmentActivity implements
 	public void onTabReselected(ActionBar.Tab tab,
 			FragmentTransaction fragmentTransaction) {
 	}
-	
-	public void hardwareInfoLoaded(String[] result, int fragment)
+	/**
+	 * This function will be triggered when the hardware info
+	 * is loaded, It will then use that info to fill the view
+	 * in the activities. 
+	 * @param result A array with all the info needed.
+	 */
+	public void hardwareInfoLoaded(String[] result)
 	{
+		// Get the views
 		Spinner governorSpinner = (Spinner) findViewById(R.id.governorSpinner);
 		Spinner frequencyCapSpinner = (Spinner) findViewById(R.id.frequencyCapSpinner);
 		Spinner ioSchedulerSpinner = (Spinner) findViewById(R.id.ioSchedulerSpinner);
-		Spinner suspendedSpinner = (Spinner) findViewById(R.id.suspendedSpinner);
 		Switch ocSwitch = (Switch) findViewById(R.id.overclockSwitch);
+		// The returned data will be stored in their variables.
 		String[] governors = result[0].split(" ");
 		String[] freqencies = result[1].split(" ");
 		String[] freqenciesShort = new String[freqencies.length];
 		ioSchedulers = result[4].split(" ");
 		int currentFrequencyPos = freqencies.length-1;
 		int currentIOScheduler = ioSchedulers.length-1;
+		// Will loop trough the frequencies and convert them to MHz.
 		for(int i = 0; i < freqencies.length; i++)
 		{
 			
@@ -195,19 +210,22 @@ public class MainActivity extends FragmentActivity implements
 				currentFrequencyPos = i;
 			freqenciesShort[i] = freqencies[i].replaceFirst("000", "") + getResources().getString(R.string.mhz);
 		}
-		governorSpinner.setAdapter(generateAdapter(governors));
-		
-		
+		// And that will also be stored in the adapter.
 		frequencyCapSpinner.setAdapter(generateAdapter(freqenciesShort));
-		suspendedSpinner.setAdapter(generateAdapter(freqenciesShort));
+		// And the current selected freq will be selected.
+		frequencyCapSpinner.setSelection(currentFrequencyPos);
+		
+		// All the governors will be add to the spinner.
+		governorSpinner.setAdapter(generateAdapter(governors));
+		// And the current selected governor will be selected
+		// in the spinner.
 		for(int i = 0; i < governors.length; i++)
 		{
 			if(result[2].indexOf(governors[i]) != -1)
 				governorSpinner.setSelection(i);
 		}
-		frequencyCapSpinner.setSelection(currentFrequencyPos);
 		
-		
+		// Will search for the currently selected IO scheduler.
 		for(int i = 0; i < ioSchedulers.length; i++)
 		{
 			if(ioSchedulers[i].charAt(0) == '[')
@@ -216,15 +234,12 @@ public class MainActivity extends FragmentActivity implements
 				ioSchedulers[i] = ioSchedulers[i].substring(1, ioSchedulers[i].length()-1);
 			}
 		}
+		// And fill the spinners/set selection
 		ioSchedulerSpinner.setAdapter(generateAdapter(ioSchedulers));
 		ioSchedulerSpinner.setSelection(currentIOScheduler);
 		
-		for(int i = 0; i < freqencies.length; i++)
-		{
-			if(result[5].indexOf(freqencies[i]) != -1)
-				suspendedSpinner.setSelection(i);
-		}
-		if(result[6].indexOf('1') != -1)
+		// If overclock is one turn the switch on.
+		if(result[5].indexOf('1') != -1)
 		{
 			ocSwitch.setChecked(true);
 			onOverclockSwitchClick(ocSwitch);
@@ -234,6 +249,11 @@ public class MainActivity extends FragmentActivity implements
 		((Switch) findViewById(R.id.setCpuSettingsOnBootSwitch)).setChecked(pm.getBoolean(SET_ON_BOOT_SETTING, false));
 		dialog.dismiss();
 	}
+	/**
+	 * If the overclock switch is clicked this function
+	 * will change the textview containing some information.
+	 * @param view
+	 */
 	public void onOverclockSwitchClick(View view)
 	{
 		Switch ocSwitch = (Switch) view;
@@ -244,39 +264,52 @@ public class MainActivity extends FragmentActivity implements
 			overclockInfo.setText(getResources().getString(R.string.allow_overclock_off));
 		
 	}
+	/**
+	 * When the apply button is clicked in the CPU tab this
+	 * function will be triggered, this function will then
+	 * start a thread that will write the settings to files.
+	 * The settings will also be stored in the shared preferences.
+	 * @param button
+	 */
 	public void applyCpuSettings(View button)
 	{
+		// Open a dialog
 		dialog = ProgressDialog.show(this, getResources().getString(R.string.please_wait), getResources().getString(R.string.being_saved));
+		// Get the data from the views.
 		String selectedFrequencyCap = (String)(((Spinner) findViewById(R.id.frequencyCapSpinner)).getSelectedItem());
 		String selectedGovernor = (String)(((Spinner) findViewById(R.id.governorSpinner)).getSelectedItem());
-		String selectedSuspendedCap = (String)(((Spinner) findViewById(R.id.suspendedSpinner)).getSelectedItem());
 		Boolean onBootEnabled = (Boolean)(((Switch) findViewById(R.id.setCpuSettingsOnBootSwitch)).isChecked());
 		int ocEnabled = 0;
 		if(((Switch)findViewById(R.id.overclockSwitch)).isChecked()) ocEnabled = 1;
 		
+		// And run the commands in a thread.
 		String[] files = {
 				"/sys/module/cpu_tegra/parameters/cpu_user_cap",
-				"/sys/htc/suspend_freq",
 				"/sys/module/cpu_tegra/parameters/enable_oc",
 				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor",				
 		};
 		String[] values = {
 				selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000"),
-				selectedSuspendedCap.replace(getResources().getString(R.string.mhz), "000"),
 				"" + ocEnabled,
 				selectedGovernor
 		};
 		new SetHardwareInfoTask(files, values, dialog).execute();
+		// And store them in the shared preferences.
 		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
 		Editor ed = pm.edit();
-		System.out.println(pm.getAll().toString());
 		ed.putString(SELECTED_FREQ_SETTING, selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000"));
 		ed.putString(SELECTED_GOV_SETTING, selectedGovernor);
-		ed.putString(SELECTED_SUSPENDED_FREQ_SETTINGS, selectedSuspendedCap.replace(getResources().getString(R.string.mhz), "000"));
 		ed.putBoolean(SET_ON_BOOT_SETTING, onBootEnabled);
 		ed.putInt(OC_ENABLED, ocEnabled);
 		ed.commit();
 	}
+	/**
+	 * When the apply button is clicked in the adnaved tab this
+	 * function will be triggered, this function will then
+	 * start a thread that will write the settings to files.
+	 * The settings will also be stored in the shared preferences.
+	 * @param button
+	 */
 	public void applyAdvancedSettings(View button)
 	{
 		dialog = ProgressDialog.show(this, getResources().getString(R.string.please_wait), getResources().getString(R.string.being_saved));
@@ -293,6 +326,13 @@ public class MainActivity extends FragmentActivity implements
 		ed.putString(SELECTED_SCHEDULER_SETTING, selectedScheduler);
 		ed.commit();
 	}
+	/**
+	 * This function will generate a ArrayAdapter
+	 * to use in a simple spinner.
+	 * @param args A array of strings that should be put in
+	 * 				the ArrayAdapter.
+	 * @return An ArrayAdapter including the args. 
+	 */
 	public ArrayAdapter<String> generateAdapter(String[] args)
 	{
 		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, args);
@@ -345,11 +385,11 @@ public class MainActivity extends FragmentActivity implements
 		public CharSequence getPageTitle(int position) {
 			switch (position) {
 			case 0:
-				return getString(R.string.title_profiles_section).toUpperCase();
+				return getString(R.string.title_profiles_section).toUpperCase(Locale.US);
 			case 1:
-				return getString(R.string.title_cpu_section).toUpperCase();
+				return getString(R.string.title_cpu_section).toUpperCase(Locale.US);
 			case 2:
-				return getString(R.string.title_advanced_section).toUpperCase();
+				return getString(R.string.title_advanced_section).toUpperCase(Locale.US);
 			}
 			return null;
 		}
