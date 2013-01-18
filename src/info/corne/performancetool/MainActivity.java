@@ -27,6 +27,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -160,7 +161,8 @@ public class MainActivity extends FragmentActivity implements
 				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor",
 				"/sys/module/cpu_tegra/parameters/cpu_user_cap",
 				"/sys/block/mmcblk0/queue/scheduler",
-				"/sys/module/cpu_tegra/parameters/enable_oc");
+				"/sys/module/cpu_tegra/parameters/enable_oc",
+				"/sys/kernel/tegra_mpdecision/conf/max_cpus");
 	}
 
 	@Override
@@ -203,20 +205,23 @@ public class MainActivity extends FragmentActivity implements
 		// The returned data will be stored in their variables.
 		String[] governors = result[0].split(" ");
 		String[] freqencies = result[1].split(" ");
-		String[] freqenciesShort = new String[freqencies.length];
+		// frequenciesShort will be Disabled + all the frequencies in MHz.
+		String[] frequenciesShort = new String[freqencies.length+1];
+		frequenciesShort[0] = "Disabled";
 		ioSchedulers = result[4].split(" ");
 		int currentFrequencyPos = freqencies.length-1;
 		int currentIOScheduler = ioSchedulers.length-1;
 		// Will loop trough the frequencies and convert them to MHz.
 		for(int i = 0; i < freqencies.length; i++)
 		{
-			
-			if(result[3].indexOf(freqencies[i]) != -1)
-				currentFrequencyPos = i;
-			freqenciesShort[i] = freqencies[i].replaceFirst("000", "") + getResources().getString(R.string.mhz);
+			if(result[3].indexOf("000") == -1) 
+				currentFrequencyPos = 0;
+			else if(result[3].indexOf(freqencies[i]) != -1)
+				currentFrequencyPos = i + 1;
+			frequenciesShort[i+1] = freqencies[i].replaceFirst("000", "") + getResources().getString(R.string.mhz);
 		}
 		// And that will also be stored in the adapter.
-		frequencyCapSpinner.setAdapter(generateAdapter(freqenciesShort));
+		frequencyCapSpinner.setAdapter(generateAdapter(frequenciesShort));
 		// And the current selected freq will be selected.
 		frequencyCapSpinner.setSelection(currentFrequencyPos);
 		
@@ -282,21 +287,30 @@ public class MainActivity extends FragmentActivity implements
 		dialog = ProgressDialog.show(this, getResources().getString(R.string.please_wait), getResources().getString(R.string.being_saved));
 		// Get the data from the views.
 		String selectedFrequencyCap = (String)(((Spinner) findViewById(R.id.frequencyCapSpinner)).getSelectedItem());
+		int maxCpus = ((SeekBar) findViewById(R.id.maxCpusSeek)).getProgress();
+		if(selectedFrequencyCap.compareTo(getResources().getString(R.string.disabled)) == 0) 
+			selectedFrequencyCap = "0";
+		else 
+			selectedFrequencyCap = selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000");
+		System.out.println(selectedFrequencyCap);
 		String selectedGovernor = (String)(((Spinner) findViewById(R.id.governorSpinner)).getSelectedItem());
 		Boolean onBootEnabled = (Boolean)(((Switch) findViewById(R.id.setCpuSettingsOnBootSwitch)).isChecked());
 		int ocEnabled = 0;
-		if(((Switch)findViewById(R.id.overclockSwitch)).isChecked()) ocEnabled = 1;
+		if(((Switch)findViewById(R.id.overclockSwitch)).isChecked()) 
+			ocEnabled = 1;
 		
 		// And run the commands in a thread.
 		String[] files = {
 				"/sys/module/cpu_tegra/parameters/cpu_user_cap",
 				"/sys/module/cpu_tegra/parameters/enable_oc",
-				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor",				
+				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor",
+				"/sys/kernel/tegra_mpdecision/conf/max_cpus"
 		};
 		String[] values = {
-				selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000"),
+				selectedFrequencyCap,
 				"" + ocEnabled,
-				selectedGovernor
+				selectedGovernor,
+				maxCpus + ""
 		};
 		new SetHardwareInfoTask(files, values, dialog).execute();
 		// And store them in the shared preferences.
