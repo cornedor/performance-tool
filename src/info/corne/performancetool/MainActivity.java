@@ -2,6 +2,8 @@ package info.corne.performancetool;
 
 import java.util.Locale;
 
+import org.xml.sax.Parser;
+
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.FragmentTransaction;
@@ -78,6 +80,7 @@ public class MainActivity extends FragmentActivity implements
 	static String SET_ON_BOOT_SETTING = "info.corne.performancetool.setOnBootSetting";
 	static String SELECTED_SCHEDULER_SETTING = "info.corne.performancetool.selectedScheduler";
 	static String OC_ENABLED = "info.corne.performancetool.overclockEnabled";
+	static String MAX_CPUS = "info.corne.performancetool.maxCpus";
 
 	/**
 	 * The {@link ViewPager} that will host the section contents.
@@ -201,6 +204,7 @@ public class MainActivity extends FragmentActivity implements
 		Spinner governorSpinner = (Spinner) findViewById(R.id.governorSpinner);
 		Spinner frequencyCapSpinner = (Spinner) findViewById(R.id.frequencyCapSpinner);
 		Spinner ioSchedulerSpinner = (Spinner) findViewById(R.id.ioSchedulerSpinner);
+		SeekBar maxCpusSeek = (SeekBar) findViewById(R.id.maxCpusSeek);
 		Switch ocSwitch = (Switch) findViewById(R.id.overclockSwitch);
 		// The returned data will be stored in their variables.
 		String[] governors = result[0].split(" ");
@@ -254,6 +258,8 @@ public class MainActivity extends FragmentActivity implements
 			ocSwitch.setChecked(true);
 			onOverclockSwitchClick(ocSwitch);
 		}
+		maxCpusSeek.setProgress((int) Float.parseFloat(result[6])-1);
+		
 		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		
 		((Switch) findViewById(R.id.setCpuSettingsOnBootSwitch)).setChecked(pm.getBoolean(SET_ON_BOOT_SETTING, false));
@@ -287,7 +293,7 @@ public class MainActivity extends FragmentActivity implements
 		dialog = ProgressDialog.show(this, getResources().getString(R.string.please_wait), getResources().getString(R.string.being_saved));
 		// Get the data from the views.
 		String selectedFrequencyCap = (String)(((Spinner) findViewById(R.id.frequencyCapSpinner)).getSelectedItem());
-		int maxCpus = ((SeekBar) findViewById(R.id.maxCpusSeek)).getProgress();
+		int maxCpus = ((SeekBar) findViewById(R.id.maxCpusSeek)).getProgress() + 1;
 		if(selectedFrequencyCap.compareTo(getResources().getString(R.string.disabled)) == 0) 
 			selectedFrequencyCap = "0";
 		else 
@@ -320,6 +326,7 @@ public class MainActivity extends FragmentActivity implements
 		ed.putString(SELECTED_GOV_SETTING, selectedGovernor);
 		ed.putBoolean(SET_ON_BOOT_SETTING, onBootEnabled);
 		ed.putInt(OC_ENABLED, ocEnabled);
+		ed.putString(MAX_CPUS, maxCpus + "");
 		ed.commit();
 	}
 	/**
