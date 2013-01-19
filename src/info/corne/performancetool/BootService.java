@@ -1,5 +1,7 @@
 package info.corne.performancetool;
 
+import info.corne.performancetool.statics.FileNames;
+import info.corne.performancetool.statics.Settings;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -48,17 +50,17 @@ public class BootService extends Service{
 		@Override
 		protected Void doInBackground(Void... arg0) {
 			SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-			if(sharedPreferences.getBoolean(MainActivity.SET_ON_BOOT_SETTING, false))
+			if(sharedPreferences.getBoolean(Settings.SET_ON_BOOT_SETTING, false))
 			{
-				String selectedFrequencyCap = sharedPreferences.getString(MainActivity.SELECTED_FREQ_SETTING, "0");
-				String selectedGovernor = sharedPreferences.getString(MainActivity.SELECTED_GOV_SETTING, "Undefined");
-				String selectedScheduler = sharedPreferences.getString(MainActivity.SELECTED_SCHEDULER_SETTING, "Undefined");
-				int ocEnabled = sharedPreferences.getInt(MainActivity.OC_ENABLED, 0);
+				String selectedFrequencyCap = sharedPreferences.getString(Settings.SELECTED_FREQ_SETTING, "0");
+				String selectedGovernor = sharedPreferences.getString(Settings.SELECTED_GOV_SETTING, "Undefined");
+				String selectedScheduler = sharedPreferences.getString(Settings.SELECTED_SCHEDULER_SETTING, "Undefined");
+				int ocEnabled = sharedPreferences.getInt(Settings.OC_ENABLED, 0);
 				
-				String[] frequencyCommand = {"su", "-c", "echo " + selectedFrequencyCap + " > /sys/module/cpu_tegra/parameters/cpu_user_cap"};
-				String[] schedulerCommand = {"su", "-c", "echo " + selectedScheduler + " > /sys/block/mmcblk0/queue/scheduler" };
-				String[] governorCommand = {"su", "-c", "echo " + selectedGovernor + " > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"};
-				String[] ocCommand = {"su", "-c", "echo " + ocEnabled + " > /sys/module/cpu_tegra/parameters/enable_oc"};
+				String[] frequencyCommand = {"su", "-c", "echo " + selectedFrequencyCap + " > " + FileNames.CPU_USER_CAP};
+				String[] schedulerCommand = {"su", "-c", "echo " + selectedScheduler + " > " + FileNames.IO_SCHEDULERS};
+				String[] governorCommand = {"su", "-c", "echo " + selectedGovernor + " > " + FileNames.SCALING_GOVERNOR};
+				String[] ocCommand = {"su", "-c", "echo " + ocEnabled + " > " + FileNames.ENABLE_OC};
 				
 				ShellCommand.run(frequencyCommand);
 				ShellCommand.run(schedulerCommand);

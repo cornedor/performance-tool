@@ -1,5 +1,7 @@
 package info.corne.performancetool;
 
+import info.corne.performancetool.utils.StringUtils;
+
 import java.io.File;
 
 import android.app.ProgressDialog;
@@ -28,6 +30,7 @@ public class SetHardwareInfoTask extends AsyncTask<String[], Void, Void>
 {
 	String[] files;
 	String[] values;
+	Boolean refresh = false;
 	ProgressDialog dialog;
 	/**
 	 * 
@@ -40,12 +43,20 @@ public class SetHardwareInfoTask extends AsyncTask<String[], Void, Void>
 		this.values = values;
 		this.dialog = dialog;
 	}
+	public SetHardwareInfoTask(String[] files, String[] values, ProgressDialog dialog, Boolean refresh)
+	{
+		this.files = files;
+		this.refresh = refresh;
+		this.values = values;
+		this.dialog = dialog;
+	}
 	@Override
 	protected Void doInBackground(String[]... params) {
 		for(int i = 0; i < files.length; i++)
 		{
 			// Run the commands as root.
 			String[] command = {"su", "-c", "echo \"" + values[i] + "\" > " + files[i]};
+			System.out.println(StringUtils.join(command, " "));
 			ShellCommand.run(command);
 		}
 		return null;
@@ -54,6 +65,7 @@ public class SetHardwareInfoTask extends AsyncTask<String[], Void, Void>
 	protected void onPostExecute(Void res)
 	{
 		dialog.dismiss();
+		if(this.refresh) "c".split("");
 	}
 
 }

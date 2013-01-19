@@ -9,25 +9,27 @@
         android:layout_height="wrap_content" >
 
         <EditText
-            android:id="@+id/editText1"
+            android:id="@+id/profileNameInput"
             android:layout_width="0dip"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:ems="10"
-            android:inputType="text" >
+            android:inputType="textNoSuggestions" >
 
             <requestFocus />
         </EditText>
 
         <Button
-            android:id="@+id/button1"
+            android:id="@+id/addProfileButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:onClick="addProfile"
             android:text="@string/add" />
+
     </LinearLayout>
 
     <ListView
-        android:id="@+id/listView1"
+        android:id="@+id/profilesListView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
     </ListView>
