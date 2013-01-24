@@ -35,4 +35,5 @@
     <string name="delete">Delete</string>
     <string name="default_profile">Default</string>
     <string name="default_no_remove">You can\'t remove the default profile.</string>
+    <string name="volts">CPU</string>
 </resources>

@@ -295,22 +295,34 @@ public class MainActivity extends FragmentActivity implements
 	{
 		int itemId = item.getItemId();
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		String selectedItem = (String) profilesAdapter.getItem(info.position);
 		switch(itemId){
+		case 1:
+			StringBuilder message = new StringBuilder();
+			message.append(getResources().getString(R.string.cpu_cap) + ": ");
+			message.append(sharedPreferences.getString(Settings.SELECTED_FREQ_SETTING + selectedItem, "Disabled")
+					.replaceFirst("000", "") + getResources().getString(R.string.mhz));
+			message.append("\n" + getResources().getString(R.string.max_cpus) + ": ");
+			message.append(sharedPreferences.getString(Settings.MAX_CPUS + selectedItem, "4"));
+			message.append("\n" + getResources().getString(R.string.governor) + ": ");
+			message.append(sharedPreferences.getString(Settings.SELECTED_GOV_SETTING + selectedItem, "Undefined"));
+			Toast.makeText(this, message.toString(), Toast.LENGTH_LONG).show();
+			break;
 		case 2:
-			String selectedItem = (String) profilesAdapter.getItem(info.position);
 			if(info.position == 0)
 			{
 				Toast.makeText(this, getResources().getString(R.string.default_no_remove), Toast.LENGTH_SHORT).show();
 			}
 			else
 			{
-				SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 				Editor editor = sharedPreferences.edit();
 				String profiles = sharedPreferences.getString(Settings.PROFILES, "").replace("|" + selectedItem, "");
 				editor.putString(Settings.PROFILES, profiles);
 				editor.commit();
 				refreshProfilesList();
 			}
+			break;
 		}
 		
 		return true;
@@ -441,14 +453,13 @@ public class MainActivity extends FragmentActivity implements
 			newProfiles[profiles.length] = profileName;
 			
 			Editor editor = sharedPreferences.edit();
-			String prefix = "_" + profileName.toUpperCase(Locale.US);
 			editor.putString(Settings.PROFILES, StringUtils.join(newProfiles, "|"));
-			editor.putString(Settings.SELECTED_FREQ_SETTING + prefix, 
+			editor.putString(Settings.SELECTED_FREQ_SETTING + profileName, 
 					selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000"));
-			editor.putString(Settings.OC_ENABLED + prefix, "" + ocEnabled);
-			editor.putString(Settings.SELECTED_GOV_SETTING + prefix, selectedGovernor);
-			editor.putString(Settings.SELECTED_SCHEDULER_SETTING + prefix, selectedScheduler);
-			editor.putString(Settings.MAX_CPUS + prefix, maxCpus + "");
+			editor.putString(Settings.OC_ENABLED + profileName, "" + ocEnabled);
+			editor.putString(Settings.SELECTED_GOV_SETTING + profileName, selectedGovernor);
+			editor.putString(Settings.SELECTED_SCHEDULER_SETTING + profileName, selectedScheduler);
+			editor.putString(Settings.MAX_CPUS + profileName, maxCpus + "");
 			editor.commit();
 			refreshProfilesList();
 		}
@@ -584,11 +595,10 @@ public class MainActivity extends FragmentActivity implements
 		}
 		else
 		{
-			String prefix = "_" + selectedProfile.toUpperCase(Locale.US);
-			String selectedFrequencyCap = sharedPreferences.getString(Settings.SELECTED_FREQ_SETTING + prefix, "0");
-			String ocEnabled = sharedPreferences.getString(Settings.OC_ENABLED + prefix, "0");
-			String selectedGovernor = sharedPreferences.getString(Settings.SELECTED_GOV_SETTING + prefix, "");
-			String selectedScheduler = sharedPreferences.getString(Settings.SELECTED_SCHEDULER_SETTING + prefix, "");
+			String selectedFrequencyCap = sharedPreferences.getString(Settings.SELECTED_FREQ_SETTING + selectedProfile, "0");
+			String ocEnabled = sharedPreferences.getString(Settings.OC_ENABLED + selectedProfile, "0");
+			String selectedGovernor = sharedPreferences.getString(Settings.SELECTED_GOV_SETTING + selectedProfile, "");
+			String selectedScheduler = sharedPreferences.getString(Settings.SELECTED_SCHEDULER_SETTING + selectedProfile, "");
 			String maxCpus = sharedPreferences.getString(Settings.MAX_CPUS, "4");
 			String[] files = {
 					FileNames.CPU_USER_CAP,
@@ -611,5 +621,4 @@ public class MainActivity extends FragmentActivity implements
 			
 		}
 	}
-
 }
