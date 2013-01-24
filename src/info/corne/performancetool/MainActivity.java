@@ -1,5 +1,9 @@
 package info.corne.performancetool;
 
+import info.corne.performancetool.activities.AdvancedSettingsActivity;
+import info.corne.performancetool.activities.CPUSettingsActivity;
+import info.corne.performancetool.activities.ProfilesActivity;
+import info.corne.performancetool.statics.DefaultSettings;
 import info.corne.performancetool.statics.FileNames;
 import info.corne.performancetool.statics.Settings;
 import info.corne.performancetool.utils.StringUtils;
@@ -9,11 +13,13 @@ import java.util.Locale;
 
 import android.app.ActionBar;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
@@ -64,7 +70,7 @@ import android.widget.Toast;
  *
  */
 public class MainActivity extends FragmentActivity implements
-		ActionBar.TabListener {
+		SetHardwareInterface, ActionBar.TabListener, OnItemClickListener {
 
 	/**
 	 * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -265,7 +271,8 @@ public class MainActivity extends FragmentActivity implements
 		ListView profilesList = (ListView) findViewById(R.id.profilesListView);
 		registerForContextMenu(profilesList);
 		final Context mainContext = this;
-		profilesList.setOnItemClickListener(new OnItemClickListener() {
+		profilesList.setOnItemClickListener(this);
+		/*profilesList.setOnItemClickListener(new OnItemClickListener() {
 
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int pos,
@@ -294,11 +301,13 @@ public class MainActivity extends FragmentActivity implements
 							selectedGovernor,
 							selectedScheduler
 					};
-					new SetHardwareInfoTask(files, values, dialog, true).execute();
+					SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
+					task.addListener(this);
+					task.execute();
 					
 				}
 			}
-		});
+		});*/
 	}
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
@@ -553,6 +562,66 @@ public class MainActivity extends FragmentActivity implements
 			textView.setText(Integer.toString(getArguments().getInt(
 					ARG_SECTION_NUMBER)));
 			return textView;
+		}
+	}
+
+	@Override
+	public void notifyOfHardwareInfoSaved(AsyncTask<String[], Void, Void> task) {
+		runOnUiThread(new Runnable() {
+			
+			@Override
+			public void run() {
+				getHardwareInfo();
+			}
+		});
+	}
+	@Override
+	public void onItemClick(AdapterView<?> parent, View view, int pos,
+			long id) {
+		String selectedProfile = (String) profilesAdapter.getItem(pos);
+		dialog = ProgressDialog.show(this, getResources().getString(R.string.please_wait), getResources().getString(R.string.being_saved));
+		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		if(pos == 0)
+		{
+			String[] files = {
+				FileNames.CPU_USER_CAP,
+				FileNames.ENABLE_OC,
+				FileNames.SCALING_GOVERNOR,
+				FileNames.IO_SCHEDULERS
+			};
+			String[] values = {
+				DefaultSettings.ENABLE_OC,
+				DefaultSettings.CPU_USER_CAP,
+				DefaultSettings.SCALING_GOVERNOR,
+				DefaultSettings.IO_SCHEDULERS
+			};
+			SetHardwareInfoTask task = new SetHardwareInfoTask(files,  values, dialog, true);
+			task.addListener(this);
+			task.execute();
+		}
+		else
+		{
+			String prefix = "_" + selectedProfile.toUpperCase(Locale.US);
+			String selectedFrequencyCap = sharedPreferences.getString(Settings.SELECTED_FREQ_SETTING + prefix, "0");
+			String ocEnabled = sharedPreferences.getString(Settings.OC_ENABLED + prefix, "0");
+			String selectedGovernor = sharedPreferences.getString(Settings.SELECTED_GOV_SETTING + prefix, "");
+			String selectedScheduler = sharedPreferences.getString(Settings.SELECTED_SCHEDULER_SETTING + prefix, "");
+			String[] files = {
+					FileNames.CPU_USER_CAP,
+					FileNames.ENABLE_OC,
+					FileNames.SCALING_GOVERNOR,
+					FileNames.IO_SCHEDULERS
+			};
+			String[] values = {
+					selectedFrequencyCap,
+					ocEnabled,
+					selectedGovernor,
+					selectedScheduler
+			};
+			SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
+			task.addListener(this);
+			task.execute();
+			
 		}
 	}
 
