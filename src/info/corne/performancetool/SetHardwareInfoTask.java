@@ -1,6 +1,10 @@
 package info.corne.performancetool;
 
+import info.corne.performancetool.utils.StringUtils;
+
 import java.io.File;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
@@ -26,8 +30,11 @@ import android.os.AsyncTask;
  */
 public class SetHardwareInfoTask extends AsyncTask<String[], Void, Void>
 {
+	private final Set<SetHardwareInterface> listeners = new CopyOnWriteArraySet<SetHardwareInterface>();
+	
 	String[] files;
 	String[] values;
+	Boolean refresh = false;
 	ProgressDialog dialog;
 	/**
 	 * 
@@ -40,20 +47,45 @@ public class SetHardwareInfoTask extends AsyncTask<String[], Void, Void>
 		this.values = values;
 		this.dialog = dialog;
 	}
+	public SetHardwareInfoTask(String[] files, String[] values, ProgressDialog dialog, Boolean refresh)
+	{
+		this.files = files;
+		this.refresh = refresh;
+		this.values = values;
+		this.dialog = dialog;
+	}
+	public void addListener(final SetHardwareInterface listener)
+	{
+		listeners.add(listener);
+	}
+	public void removeListener(final SetHardwareInterface listener)
+	{
+		listeners.remove(listener);
+	}
+	private final void notifyListeners()
+	{
+		for(SetHardwareInterface listener : listeners)
+		{
+			listener.notifyOfHardwareInfoSaved(this);
+		}
+	}
 	@Override
 	protected Void doInBackground(String[]... params) {
 		for(int i = 0; i < files.length; i++)
 		{
 			// Run the commands as root.
 			String[] command = {"su", "-c", "echo \"" + values[i] + "\" > " + files[i]};
+			System.out.println(StringUtils.join(command, " "));
 			ShellCommand.run(command);
 		}
+		notifyListeners();
 		return null;
 	}
 	@Override
 	protected void onPostExecute(Void res)
 	{
 		dialog.dismiss();
+		if(this.refresh) "c".split("");
 	}
 
 }

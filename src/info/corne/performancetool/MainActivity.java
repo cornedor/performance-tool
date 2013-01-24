@@ -1,16 +1,27 @@
 package info.corne.performancetool;
 
+import info.corne.performancetool.activities.AdvancedSettingsActivity;
+import info.corne.performancetool.activities.CPUSettingsActivity;
+import info.corne.performancetool.activities.ProfilesActivity;
+import info.corne.performancetool.statics.DefaultSettings;
+import info.corne.performancetool.statics.FileNames;
+import info.corne.performancetool.statics.Settings;
+import info.corne.performancetool.utils.StringUtils;
+
+import java.util.HashMap;
 import java.util.Locale;
 
 import org.xml.sax.Parser;
 
 import android.app.ActionBar;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
@@ -18,18 +29,23 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.SeekBar;
+import android.widget.EditText;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -58,7 +74,7 @@ import android.widget.Toast;
  *
  */
 public class MainActivity extends FragmentActivity implements
-		ActionBar.TabListener {
+		SetHardwareInterface, ActionBar.TabListener, OnItemClickListener {
 
 	/**
 	 * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -71,17 +87,12 @@ public class MainActivity extends FragmentActivity implements
 	SectionsPagerAdapter mSectionsPagerAdapter;
 	CPUSettingsActivity cpuSettingsActivity;
 	AdvancedSettingsActivity advancedSettingsActivity;
+	ProfilesActivity profilesActivity;
 	ProgressDialog dialog;
 	String[] hardwareInfo;
 	String[] ioSchedulers;
+	ListAdapter profilesAdapter;
 	
-	static String SELECTED_FREQ_SETTING = "info.corne.performancetool.selectedFrequencyCap";
-	static String SELECTED_GOV_SETTING = "info.corne.performancetool.selectedGovernor";
-	static String SET_ON_BOOT_SETTING = "info.corne.performancetool.setOnBootSetting";
-	static String SELECTED_SCHEDULER_SETTING = "info.corne.performancetool.selectedScheduler";
-	static String OC_ENABLED = "info.corne.performancetool.overclockEnabled";
-	static String MAX_CPUS = "info.corne.performancetool.maxCpus";
-
 	/**
 	 * The {@link ViewPager} that will host the section contents.
 	 */
@@ -159,13 +170,13 @@ public class MainActivity extends FragmentActivity implements
 	{
 		dialog = ProgressDialog.show(this, getResources().getString(R.string.please_wait), getResources().getString(R.string.gathering_info));
 		new GetHardwareInfoTask(this).execute(
-				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors",
-				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies",
-				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor",
-				"/sys/module/cpu_tegra/parameters/cpu_user_cap",
-				"/sys/block/mmcblk0/queue/scheduler",
-				"/sys/module/cpu_tegra/parameters/enable_oc",
-				"/sys/kernel/tegra_mpdecision/conf/max_cpus");
+				FileNames.SCALING_AVAILABLE_GOVERNORS,
+				FileNames.SCALING_AVAILABLE_FREQUENCIES,
+				FileNames.SCALING_GOVERNOR,
+				FileNames.CPU_USER_CAP,
+				FileNames.IO_SCHEDULERS,
+				FileNames.ENABLE_OC,
+				FileNames.MAX_CPUS);
 	}
 
 	@Override
@@ -253,17 +264,56 @@ public class MainActivity extends FragmentActivity implements
 		ioSchedulerSpinner.setSelection(currentIOScheduler);
 		
 		// If overclock is one turn the switch on.
-		if(result[5].indexOf('1') != -1)
-		{
-			ocSwitch.setChecked(true);
-			onOverclockSwitchClick(ocSwitch);
-		}
+		if(result[5].indexOf('1') != -1) ocSwitch.setChecked(true);
+		else ocSwitch.setChecked(false);
+		onOverclockSwitchClick(ocSwitch);
 		maxCpusSeek.setProgress((int) Float.parseFloat(result[6])-1);
 		
 		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		
-		((Switch) findViewById(R.id.setCpuSettingsOnBootSwitch)).setChecked(pm.getBoolean(SET_ON_BOOT_SETTING, false));
+		((Switch) findViewById(R.id.setCpuSettingsOnBootSwitch)).setChecked(pm.getBoolean(Settings.SET_ON_BOOT_SETTING, false));
 		dialog.dismiss();
+		
+		refreshProfilesList();
+		ListView profilesList = (ListView) findViewById(R.id.profilesListView);
+		registerForContextMenu(profilesList);
+		profilesList.setOnItemClickListener(this);
+	}
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+		super.onCreateContextMenu(menu, v, menuInfo);
+		AdapterContextMenuInfo aInfo = (AdapterContextMenuInfo) menuInfo;
+		 
+		String selectedItem = (String) profilesAdapter.getItem(aInfo.position);
+		 
+		menu.setHeaderTitle(selectedItem);
+		menu.add(1, 1, 1, getResources().getString(R.string.details));
+		menu.add(1, 2, 2, getResources().getString(R.string.delete));
+	}
+	@Override
+	public boolean onContextItemSelected(MenuItem item)
+	{
+		int itemId = item.getItemId();
+		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+		switch(itemId){
+		case 2:
+			String selectedItem = (String) profilesAdapter.getItem(info.position);
+			if(info.position == 0)
+			{
+				Toast.makeText(this, getResources().getString(R.string.default_no_remove), Toast.LENGTH_SHORT).show();
+			}
+			else
+			{
+				SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+				Editor editor = sharedPreferences.edit();
+				String profiles = sharedPreferences.getString(Settings.PROFILES, "").replace("|" + selectedItem, "");
+				editor.putString(Settings.PROFILES, profiles);
+				editor.commit();
+				refreshProfilesList();
+			}
+		}
+		
+		return true;
 	}
 	/**
 	 * If the overclock switch is clicked this function
@@ -294,7 +344,7 @@ public class MainActivity extends FragmentActivity implements
 		// Get the data from the views.
 		String selectedFrequencyCap = (String)(((Spinner) findViewById(R.id.frequencyCapSpinner)).getSelectedItem());
 		int maxCpus = ((SeekBar) findViewById(R.id.maxCpusSeek)).getProgress() + 1;
-		if(selectedFrequencyCap.compareTo(getResources().getString(R.string.disabled)) == 0) 
+		if(selectedFrequencyCap.compareTo(getResources().getString(R.string.disabled_string)) == 0) 
 			selectedFrequencyCap = "0";
 		else 
 			selectedFrequencyCap = selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000");
@@ -307,10 +357,10 @@ public class MainActivity extends FragmentActivity implements
 		
 		// And run the commands in a thread.
 		String[] files = {
-				"/sys/module/cpu_tegra/parameters/cpu_user_cap",
-				"/sys/module/cpu_tegra/parameters/enable_oc",
-				"/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor",
-				"/sys/kernel/tegra_mpdecision/conf/max_cpus"
+				FileNames.CPU_USER_CAP,
+				FileNames.ENABLE_OC,
+				FileNames.SCALING_GOVERNOR,
+				FileNames.MAX_CPUS
 		};
 		String[] values = {
 				selectedFrequencyCap,
@@ -322,15 +372,15 @@ public class MainActivity extends FragmentActivity implements
 		// And store them in the shared preferences.
 		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
 		Editor ed = pm.edit();
-		ed.putString(SELECTED_FREQ_SETTING, selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000"));
-		ed.putString(SELECTED_GOV_SETTING, selectedGovernor);
-		ed.putBoolean(SET_ON_BOOT_SETTING, onBootEnabled);
-		ed.putInt(OC_ENABLED, ocEnabled);
-		ed.putString(MAX_CPUS, maxCpus + "");
+		ed.putString(Settings.SELECTED_FREQ_SETTING, selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000"));
+		ed.putString(Settings.SELECTED_GOV_SETTING, selectedGovernor);
+		ed.putBoolean(Settings.SET_ON_BOOT_SETTING, onBootEnabled);
+		ed.putInt(Settings.OC_ENABLED, ocEnabled);
+		ed.putString(Settings.MAX_CPUS, maxCpus + "");
 		ed.commit();
 	}
 	/**
-	 * When the apply button is clicked in the adnaved tab this
+	 * When the apply button is clicked in the advanced tab this
 	 * function will be triggered, this function will then
 	 * start a thread that will write the settings to files.
 	 * The settings will also be stored in the shared preferences.
@@ -344,12 +394,13 @@ public class MainActivity extends FragmentActivity implements
 				selectedScheduler
 		};
 		String[] files = {
-				"/sys/block/mmcblk0/queue/scheduler"
+				FileNames.IO_SCHEDULERS
 		};
-		new SetHardwareInfoTask(values, files, dialog).execute();
-		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
+		System.out.println(selectedScheduler);
+		new SetHardwareInfoTask(files, values, dialog).execute();
+		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		Editor ed = pm.edit();
-		ed.putString(SELECTED_SCHEDULER_SETTING, selectedScheduler);
+		ed.putString(Settings.SELECTED_SCHEDULER_SETTING, selectedScheduler);
 		ed.commit();
 	}
 	/**
@@ -364,6 +415,53 @@ public class MainActivity extends FragmentActivity implements
 		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, args);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		return adapter;
+	}
+	
+	public void addProfile(View view)
+	{
+		String selectedFrequencyCap = (String)(((Spinner) findViewById(R.id.frequencyCapSpinner)).getSelectedItem());
+		String selectedGovernor = (String)(((Spinner) findViewById(R.id.governorSpinner)).getSelectedItem());
+		String selectedScheduler = (String)(((Spinner) findViewById(R.id.ioSchedulerSpinner)).getSelectedItem());
+		int maxCpus = ((SeekBar) findViewById(R.id.maxCpusSeek)).getProgress() + 1;
+		int ocEnabled = 0;
+		if(((Switch)findViewById(R.id.overclockSwitch)).isChecked()) ocEnabled = 1;
+		EditText profileNameInput = (EditText) findViewById(R.id.profileNameInput);
+		String profileName = profileNameInput.getText().toString();
+		if(!profileName.isEmpty())
+		{
+			SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+			String[] profiles = sharedPreferences.getString(Settings.PROFILES, 
+					getResources().getString(R.string.default_profile)).split("\\|");
+			String[] newProfiles = new String[profiles.length+1];
+			for(int i = 0; i < profiles.length; i++)
+				if(profileName.toUpperCase(Locale.US).compareTo(profiles[i].toUpperCase(Locale.US)) == 0)
+					return;
+				else
+					newProfiles[i] = profiles[i];
+			newProfiles[profiles.length] = profileName;
+			
+			Editor editor = sharedPreferences.edit();
+			String prefix = "_" + profileName.toUpperCase(Locale.US);
+			editor.putString(Settings.PROFILES, StringUtils.join(newProfiles, "|"));
+			editor.putString(Settings.SELECTED_FREQ_SETTING + prefix, 
+					selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000"));
+			editor.putString(Settings.OC_ENABLED + prefix, "" + ocEnabled);
+			editor.putString(Settings.SELECTED_GOV_SETTING + prefix, selectedGovernor);
+			editor.putString(Settings.SELECTED_SCHEDULER_SETTING + prefix, selectedScheduler);
+			editor.putString(Settings.MAX_CPUS + prefix, maxCpus + "");
+			editor.commit();
+			refreshProfilesList();
+		}
+		return;
+	}
+	public void refreshProfilesList()
+	{
+		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		ListView profilesList = (ListView) findViewById(R.id.profilesListView);
+		String[] profiles = sharedPreferences.getString(Settings.PROFILES, "default").split("\\|");
+		profilesAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, profiles);
+		profilesList.setAdapter(profilesAdapter);
+		return;
 	}
 
 	/**
@@ -383,9 +481,12 @@ public class MainActivity extends FragmentActivity implements
 			// below) with the page number as its lone argument.
 			switch (position) {
 			case 0:
+				profilesActivity = new ProfilesActivity();
+				return profilesActivity;
+			case 1:
 				cpuSettingsActivity = new CPUSettingsActivity();
 				return cpuSettingsActivity;
-			case 1:
+			case 2:
 				advancedSettingsActivity = new AdvancedSettingsActivity();
 				return advancedSettingsActivity;
 			default:
@@ -401,17 +502,17 @@ public class MainActivity extends FragmentActivity implements
 		@Override
 		public int getCount() {
 			// Show 3 total pages.
-			return 2;
+			return 3;
 		}
 
 		@Override
 		public CharSequence getPageTitle(int position) {
 			switch (position) {
-			case 2:
-				return getString(R.string.title_profiles_section).toUpperCase(Locale.US);
 			case 0:
-				return getString(R.string.title_cpu_section).toUpperCase(Locale.US);
+				return getString(R.string.title_profiles_section).toUpperCase(Locale.US);
 			case 1:
+				return getString(R.string.title_cpu_section).toUpperCase(Locale.US);
+			case 2:
 				return getString(R.string.title_advanced_section).toUpperCase(Locale.US);
 			}
 			return null;
@@ -442,6 +543,72 @@ public class MainActivity extends FragmentActivity implements
 			textView.setText(Integer.toString(getArguments().getInt(
 					ARG_SECTION_NUMBER)));
 			return textView;
+		}
+	}
+
+	@Override
+	public void notifyOfHardwareInfoSaved(AsyncTask<String[], Void, Void> task) {
+		runOnUiThread(new Runnable() {
+			
+			@Override
+			public void run() {
+				getHardwareInfo();
+			}
+		});
+	}
+	@Override
+	public void onItemClick(AdapterView<?> parent, View view, int pos,
+			long id) {
+		String selectedProfile = (String) profilesAdapter.getItem(pos);
+		dialog = ProgressDialog.show(this, getResources().getString(R.string.please_wait), getResources().getString(R.string.being_saved));
+		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		if(pos == 0)
+		{
+			String[] files = {
+				FileNames.CPU_USER_CAP,
+				FileNames.ENABLE_OC,
+				FileNames.SCALING_GOVERNOR,
+				FileNames.IO_SCHEDULERS,
+				FileNames.MAX_CPUS
+			};
+			String[] values = {
+				DefaultSettings.ENABLE_OC,
+				DefaultSettings.CPU_USER_CAP,
+				DefaultSettings.SCALING_GOVERNOR,
+				DefaultSettings.IO_SCHEDULERS,
+				DefaultSettings.MAX_CPUS
+			};
+			SetHardwareInfoTask task = new SetHardwareInfoTask(files,  values, dialog, true);
+			task.addListener(this);
+			task.execute();
+		}
+		else
+		{
+			String prefix = "_" + selectedProfile.toUpperCase(Locale.US);
+			String selectedFrequencyCap = sharedPreferences.getString(Settings.SELECTED_FREQ_SETTING + prefix, "0");
+			String ocEnabled = sharedPreferences.getString(Settings.OC_ENABLED + prefix, "0");
+			String selectedGovernor = sharedPreferences.getString(Settings.SELECTED_GOV_SETTING + prefix, "");
+			String selectedScheduler = sharedPreferences.getString(Settings.SELECTED_SCHEDULER_SETTING + prefix, "");
+			String maxCpus = sharedPreferences.getString(Settings.MAX_CPUS, "4");
+			String[] files = {
+					FileNames.CPU_USER_CAP,
+					FileNames.ENABLE_OC,
+					FileNames.SCALING_GOVERNOR,
+					FileNames.IO_SCHEDULERS,
+					FileNames.MAX_CPUS
+			};
+			String[] values = {
+					selectedFrequencyCap,
+					ocEnabled,
+					selectedGovernor,
+					selectedScheduler,
+					maxCpus
+					
+			};
+			SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
+			task.addListener(this);
+			task.execute();
+			
 		}
 	}
 
