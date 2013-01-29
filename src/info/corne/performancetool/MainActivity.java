@@ -314,7 +314,7 @@ public class MainActivity extends FragmentActivity implements
 			{
 				
 				if(sharedPreferences.getString(Settings.SELECTED_FREQ_SETTING + selectedItem, 
-						"D") == "D")
+						"").indexOf("000") != -1)
 					message.append(sharedPreferences.getString(Settings.SELECTED_FREQ_SETTING + selectedItem, 
 						getResources().getString(R.string.disabled_string))
 						.replaceFirst("000", "") + getResources().getString(R.string.mhz));
