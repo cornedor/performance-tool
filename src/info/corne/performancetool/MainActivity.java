@@ -5,6 +5,7 @@ import info.corne.performancetool.activities.CPUSettingsActivity;
 import info.corne.performancetool.activities.ProfilesActivity;
 import info.corne.performancetool.statics.DefaultSettings;
 import info.corne.performancetool.statics.FileNames;
+import info.corne.performancetool.statics.PowerSettings;
 import info.corne.performancetool.statics.Settings;
 import info.corne.performancetool.utils.StringUtils;
 
@@ -301,16 +302,33 @@ public class MainActivity extends FragmentActivity implements
 		case 1:
 			StringBuilder message = new StringBuilder();
 			message.append(getResources().getString(R.string.cpu_cap) + ": ");
-			message.append(sharedPreferences.getString(Settings.SELECTED_FREQ_SETTING + selectedItem, "Disabled")
-					.replaceFirst("000", "") + getResources().getString(R.string.mhz));
-			message.append("\n" + getResources().getString(R.string.max_cpus) + ": ");
-			message.append(sharedPreferences.getString(Settings.MAX_CPUS + selectedItem, "4"));
-			message.append("\n" + getResources().getString(R.string.governor) + ": ");
-			message.append(sharedPreferences.getString(Settings.SELECTED_GOV_SETTING + selectedItem, "Undefined"));
+			if(info.position == 1)
+			{
+				message.append(PowerSettings.CPU_USER_CAP.replaceFirst("000", "") + getResources().getString(R.string.mhz));
+				message.append("\n" + getResources().getString(R.string.max_cpus) + ": ");
+				message.append(PowerSettings.MAX_CPUS);
+				message.append("\n" + getResources().getString(R.string.governor) + ": ");
+				message.append(PowerSettings.SCALING_GOVERNOR);
+			}
+			else
+			{
+				
+				if(sharedPreferences.getString(Settings.SELECTED_FREQ_SETTING + selectedItem, 
+						"D") == "D")
+					message.append(sharedPreferences.getString(Settings.SELECTED_FREQ_SETTING + selectedItem, 
+						getResources().getString(R.string.disabled_string))
+						.replaceFirst("000", "") + getResources().getString(R.string.mhz));
+				else
+					message.append(getResources().getString(R.string.disabled_string));
+				message.append("\n" + getResources().getString(R.string.max_cpus) + ": ");
+				message.append(sharedPreferences.getString(Settings.MAX_CPUS + selectedItem, "4"));
+				message.append("\n" + getResources().getString(R.string.governor) + ": ");
+				message.append(sharedPreferences.getString(Settings.SELECTED_GOV_SETTING + selectedItem, "Undefined"));
+			}
 			Toast.makeText(this, message.toString(), Toast.LENGTH_LONG).show();
 			break;
 		case 2:
-			if(info.position == 0)
+			if(info.position == 0 || info.position == 1)
 			{
 				Toast.makeText(this, getResources().getString(R.string.default_no_remove), Toast.LENGTH_SHORT).show();
 			}
@@ -443,7 +461,8 @@ public class MainActivity extends FragmentActivity implements
 		{
 			SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 			String[] profiles = sharedPreferences.getString(Settings.PROFILES, 
-					getResources().getString(R.string.default_profile)).split("\\|");
+					getResources().getString(R.string.default_profile) + "|" + 
+					getResources().getString(R.string.power_profile)).split("\\|");
 			String[] newProfiles = new String[profiles.length+1];
 			for(int i = 0; i < profiles.length; i++)
 				if(profileName.toUpperCase(Locale.US).compareTo(profiles[i].toUpperCase(Locale.US)) == 0)
@@ -469,7 +488,9 @@ public class MainActivity extends FragmentActivity implements
 	{
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		ListView profilesList = (ListView) findViewById(R.id.profilesListView);
-		String[] profiles = sharedPreferences.getString(Settings.PROFILES, "default").split("\\|");
+		String[] profiles = sharedPreferences.getString(Settings.PROFILES, 
+				getResources().getString(R.string.default_profile) + "|" +
+				getResources().getString(R.string.power_profile)).split("\\|");
 		profilesAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, profiles);
 		profilesList.setAdapter(profilesAdapter);
 		return;
@@ -583,13 +604,33 @@ public class MainActivity extends FragmentActivity implements
 				FileNames.MAX_CPUS
 			};
 			String[] values = {
-				DefaultSettings.ENABLE_OC,
 				DefaultSettings.CPU_USER_CAP,
+				DefaultSettings.ENABLE_OC,
 				DefaultSettings.SCALING_GOVERNOR,
 				DefaultSettings.IO_SCHEDULERS,
 				DefaultSettings.MAX_CPUS
 			};
-			SetHardwareInfoTask task = new SetHardwareInfoTask(files,  values, dialog, true);
+			SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
+			task.addListener(this);
+			task.execute();
+		}
+		if(pos == 1)
+		{
+			String[] files = {
+				FileNames.CPU_USER_CAP,
+				FileNames.ENABLE_OC,
+				FileNames.SCALING_GOVERNOR,
+				FileNames.IO_SCHEDULERS,
+				FileNames.MAX_CPUS
+			};
+			String[] values = {
+				PowerSettings.CPU_USER_CAP,
+				PowerSettings.ENABLE_OC,
+				PowerSettings.SCALING_GOVERNOR,
+				PowerSettings.IO_SCHEDULERS,
+				PowerSettings.MAX_CPUS
+			};
+			SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
 			task.addListener(this);
 			task.execute();
 		}
