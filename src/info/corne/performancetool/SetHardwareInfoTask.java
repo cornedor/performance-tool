@@ -28,6 +28,9 @@ import android.os.AsyncTask;
  * @author Corné Dorrestijn
  *
  */
+ 
+import java.io.File;
+
 public class SetHardwareInfoTask extends AsyncTask<String[], Void, Void>
 {
 	private final Set<SetHardwareInterface> listeners = new CopyOnWriteArraySet<SetHardwareInterface>();
@@ -75,8 +78,12 @@ public class SetHardwareInfoTask extends AsyncTask<String[], Void, Void>
 		{
 			// Run the commands as root.
 			String[] command = {"su", "-c", "echo \"" + values[i] + "\" > " + files[i]};
-			System.out.println(StringUtils.join(command, " "));
-			ShellCommand.run(command);
+			
+			File f=new File(files[i]);
+			if(f.exists()){
+				System.out.println(StringUtils.join(command, " "));
+				ShellCommand.run(command);
+			}
 		}
 		notifyListeners();
 		return null;
