@@ -9,6 +9,8 @@ import android.os.AsyncTask;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.widget.Toast;
+import java.io.File;
+
 /**
  * This service will change settings on boot
  * 
@@ -66,7 +68,11 @@ public class BootService extends Service{
 				ShellCommand.run(schedulerCommand);
 				ShellCommand.run(ocCommand);
 				ShellCommand.run(governorCommand);
-				ShellCommand.run(maxCpusCommand);
+				
+				File f=new File("/sys/kernel/tegra_mpdecision/conf/max_cpus");
+				if(f.exists()){
+					ShellCommand.run(maxCpusCommand);
+				}
 			}
 			return null;
 		}

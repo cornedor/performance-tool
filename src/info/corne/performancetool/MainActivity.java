@@ -268,7 +268,12 @@ public class MainActivity extends FragmentActivity implements
 		if(result[5].indexOf('1') != -1) ocSwitch.setChecked(true);
 		else ocSwitch.setChecked(false);
 		onOverclockSwitchClick(ocSwitch);
-		maxCpusSeek.setProgress((int) Float.parseFloat(result[6])-1);
+		
+		if(!result[6].equals("Error")){
+			maxCpusSeek.setProgress((int) Float.parseFloat(result[6])-1);
+		} else {
+			maxCpusSeek.setVisibility(View.GONE);
+		}
 		
 		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		
