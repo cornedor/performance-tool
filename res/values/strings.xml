@@ -38,4 +38,5 @@
     <string name="volts">CPU</string>
     <string name="change_volts">Change volts</string>
     <string name="warning">Warning</string>
+    <string name="audio_lag_fix">Fix audio lag</string>
 </resources>

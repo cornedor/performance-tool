@@ -1,5 +1,6 @@
 package info.corne.performancetool;
 
+import info.corne.performancetool.statics.DefaultSettings;
 import info.corne.performancetool.statics.FileNames;
 import info.corne.performancetool.statics.Settings;
 import android.app.Service;
@@ -57,22 +58,34 @@ public class BootService extends Service{
 				String selectedScheduler = sharedPreferences.getString(Settings.SELECTED_SCHEDULER_SETTING, "Undefined");
 				int ocEnabled = sharedPreferences.getInt(Settings.OC_ENABLED, 0);
 				String maxCpus = sharedPreferences.getString(Settings.MAX_CPUS, "4");
+				String suspendFreq = sharedPreferences.getString(Settings.SUSPEND_FREQ, DefaultSettings.SUSPEND_FREQ);
+				String audioFreq = sharedPreferences.getString(Settings.AUDIO_MIN_FREQ, DefaultSettings.AUDIO_MIN_FREQ);
 				
-				String[] frequencyCommand = {"su", "-c", "echo " + selectedFrequencyCap + " > /sys/module/cpu_tegra/parameters/cpu_user_cap"};
-				String[] schedulerCommand = {"su", "-c", "echo " + selectedScheduler + " > /sys/block/mmcblk0/queue/scheduler" };
-				String[] governorCommand = {"su", "-c", "echo " + selectedGovernor + " > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"};
-				String[] ocCommand = {"su", "-c", "echo " + ocEnabled + " > /sys/module/cpu_tegra/parameters/enable_oc"};
-				String[] maxCpusCommand = {"su", "-c", "echo " + maxCpus + " > /sys/kernel/tegra_mpdecision/conf/max_cpus"};
-
+				String[] frequencyCommand = {"su", "-c", "echo " + selectedFrequencyCap + " > " + FileNames.CPU_USER_CAP};
+				String[] schedulerCommand = {"su", "-c", "echo " + selectedScheduler + " > " + FileNames.IO_SCHEDULERS };
+				String[] governorCommand = {"su", "-c", "echo " + selectedGovernor + " > " + FileNames.SCALING_GOVERNOR};
+				String[] ocCommand = {"su", "-c", "echo " + ocEnabled + " > " + FileNames.ENABLE_OC};
+				String[] maxCpusCommand = {"su", "-c", "echo " + maxCpus + " > " + FileNames.MAX_CPUS};
+				String[] suspendFreqCommand = {"su", "-c", "echo " + suspendFreq + " > " + FileNames.SUSPEND_FREQ};
+				String[] audioFreqCommand = {"su", "-c", "echo " + audioFreq + " > " + FileNames.AUDIO_MIN_FREQ};
+				
+				File f;
+				
 				ShellCommand.run(frequencyCommand);
 				ShellCommand.run(schedulerCommand);
 				ShellCommand.run(ocCommand);
 				ShellCommand.run(governorCommand);
+				f=new File(FileNames.SUSPEND_FREQ);
+				if(f.exists())
+					ShellCommand.run(suspendFreqCommand);
 				
-				File f=new File("/sys/kernel/tegra_mpdecision/conf/max_cpus");
-				if(f.exists()){
+				f=new File(FileNames.AUDIO_MIN_FREQ);
+				if(f.exists())
+					ShellCommand.run(audioFreqCommand);
+				
+				f=new File(FileNames.MAX_CPUS);
+				if(f.exists())
 					ShellCommand.run(maxCpusCommand);
-				}
 			}
 			return null;
 		}

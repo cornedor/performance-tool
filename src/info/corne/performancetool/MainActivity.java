@@ -425,17 +425,30 @@ public class MainActivity extends FragmentActivity implements
 	{
 		dialog = ProgressDialog.show(this, getResources().getString(R.string.please_wait), getResources().getString(R.string.being_saved));
 		String selectedScheduler = (String)(((Spinner) findViewById(R.id.ioSchedulerSpinner)).getSelectedItem());
+		boolean fixAudioLag = ((Switch)findViewById(R.id.audioLagSwitch)).isChecked();
+		String suspendFreq = fixAudioLag ? DefaultSettings.SUSPEND_FREQ_FIX : DefaultSettings.SUSPEND_FREQ;
+		String audioFreq = fixAudioLag ? DefaultSettings.AUDIO_MIN_FREQ_FIX : DefaultSettings.AUDIO_MIN_FREQ;
+		
+		/**
+		 * @TODO: Do this a bit better so more can be added.
+		 */
 		String[] values = {
-				selectedScheduler
+				selectedScheduler,
+				suspendFreq,
+				audioFreq
 		};
 		String[] files = {
-				FileNames.IO_SCHEDULERS
+				FileNames.IO_SCHEDULERS,
+				FileNames.SUSPEND_FREQ,
+				FileNames.AUDIO_MIN_FREQ
 		};
-		System.out.println(selectedScheduler);
 		new SetHardwareInfoTask(files, values, dialog).execute();
+		
 		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		Editor ed = pm.edit();
 		ed.putString(Settings.SELECTED_SCHEDULER_SETTING, selectedScheduler);
+		ed.putString(Settings.SUSPEND_FREQ, suspendFreq);
+		ed.putString(Settings.AUDIO_MIN_FREQ, audioFreq);
 		ed.commit();
 	}
 	/**
@@ -460,6 +473,10 @@ public class MainActivity extends FragmentActivity implements
 		int maxCpus = ((SeekBar) findViewById(R.id.maxCpusSeek)).getProgress() + 1;
 		int ocEnabled = 0;
 		if(((Switch)findViewById(R.id.overclockSwitch)).isChecked()) ocEnabled = 1;
+		boolean fixAudioLag = ((Switch)findViewById(R.id.audioLagSwitch)).isChecked();
+		String suspendFreq = fixAudioLag ? DefaultSettings.SUSPEND_FREQ_FIX : DefaultSettings.SUSPEND_FREQ;
+		String audioFreq = fixAudioLag ? DefaultSettings.AUDIO_MIN_FREQ_FIX : DefaultSettings.AUDIO_MIN_FREQ;
+		
 		EditText profileNameInput = (EditText) findViewById(R.id.profileNameInput);
 		String profileName = profileNameInput.getText().toString();
 		if(!profileName.isEmpty())
@@ -484,6 +501,8 @@ public class MainActivity extends FragmentActivity implements
 			editor.putString(Settings.SELECTED_GOV_SETTING + profileName, selectedGovernor);
 			editor.putString(Settings.SELECTED_SCHEDULER_SETTING + profileName, selectedScheduler);
 			editor.putString(Settings.MAX_CPUS + profileName, maxCpus + "");
+			editor.putString(Settings.SUSPEND_FREQ + profileName, suspendFreq);
+			editor.putString(Settings.AUDIO_MIN_FREQ + profileName, audioFreq);
 			editor.commit();
 			refreshProfilesList();
 		}
@@ -606,14 +625,18 @@ public class MainActivity extends FragmentActivity implements
 				FileNames.ENABLE_OC,
 				FileNames.SCALING_GOVERNOR,
 				FileNames.IO_SCHEDULERS,
-				FileNames.MAX_CPUS
+				FileNames.MAX_CPUS,
+				FileNames.SUSPEND_FREQ,
+				FileNames.AUDIO_MIN_FREQ
 			};
 			String[] values = {
 				DefaultSettings.CPU_USER_CAP,
 				DefaultSettings.ENABLE_OC,
 				DefaultSettings.SCALING_GOVERNOR,
 				DefaultSettings.IO_SCHEDULERS,
-				DefaultSettings.MAX_CPUS
+				DefaultSettings.MAX_CPUS,
+				DefaultSettings.SUSPEND_FREQ,
+				DefaultSettings.AUDIO_MIN_FREQ
 			};
 			SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
 			task.addListener(this);
@@ -626,14 +649,18 @@ public class MainActivity extends FragmentActivity implements
 				FileNames.ENABLE_OC,
 				FileNames.SCALING_GOVERNOR,
 				FileNames.IO_SCHEDULERS,
-				FileNames.MAX_CPUS
+				FileNames.MAX_CPUS,
+				FileNames.SUSPEND_FREQ,
+				FileNames.AUDIO_MIN_FREQ
 			};
 			String[] values = {
 				PowerSettings.CPU_USER_CAP,
 				PowerSettings.ENABLE_OC,
 				PowerSettings.SCALING_GOVERNOR,
 				PowerSettings.IO_SCHEDULERS,
-				PowerSettings.MAX_CPUS
+				PowerSettings.MAX_CPUS,
+				DefaultSettings.SUSPEND_FREQ,
+				DefaultSettings.AUDIO_MIN_FREQ
 			};
 			SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
 			task.addListener(this);
@@ -646,20 +673,25 @@ public class MainActivity extends FragmentActivity implements
 			String selectedGovernor = sharedPreferences.getString(Settings.SELECTED_GOV_SETTING + selectedProfile, "");
 			String selectedScheduler = sharedPreferences.getString(Settings.SELECTED_SCHEDULER_SETTING + selectedProfile, "");
 			String maxCpus = sharedPreferences.getString(Settings.MAX_CPUS, "4");
+			String suspendFreq = sharedPreferences.getString(Settings.SUSPEND_FREQ, DefaultSettings.SUSPEND_FREQ);
+			String audioFreq = sharedPreferences.getString(Settings.AUDIO_MIN_FREQ, DefaultSettings.AUDIO_MIN_FREQ);
 			String[] files = {
 					FileNames.CPU_USER_CAP,
 					FileNames.ENABLE_OC,
 					FileNames.SCALING_GOVERNOR,
 					FileNames.IO_SCHEDULERS,
-					FileNames.MAX_CPUS
+					FileNames.MAX_CPUS,
+					FileNames.SUSPEND_FREQ,
+					FileNames.AUDIO_MIN_FREQ
 			};
 			String[] values = {
 					selectedFrequencyCap,
 					ocEnabled,
 					selectedGovernor,
 					selectedScheduler,
-					maxCpus
-					
+					maxCpus,
+					suspendFreq,
+					audioFreq
 			};
 			SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
 			task.addListener(this);
