@@ -278,6 +278,7 @@ public class MainActivity extends FragmentActivity implements
 		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		
 		((Switch) findViewById(R.id.setCpuSettingsOnBootSwitch)).setChecked(pm.getBoolean(Settings.SET_ON_BOOT_SETTING, false));
+		((Switch) findViewById(R.id.audioLagSwitch)).setChecked(pm.getBoolean(Settings.FIX_AUDIO_LAG, false));
 		dialog.dismiss();
 		
 		refreshProfilesList();
@@ -449,6 +450,7 @@ public class MainActivity extends FragmentActivity implements
 		ed.putString(Settings.SELECTED_SCHEDULER_SETTING, selectedScheduler);
 		ed.putString(Settings.SUSPEND_FREQ, suspendFreq);
 		ed.putString(Settings.AUDIO_MIN_FREQ, audioFreq);
+		ed.putBoolean(Settings.FIX_AUDIO_LAG, fixAudioLag);
 		ed.commit();
 	}
 	/**
@@ -503,6 +505,7 @@ public class MainActivity extends FragmentActivity implements
 			editor.putString(Settings.MAX_CPUS + profileName, maxCpus + "");
 			editor.putString(Settings.SUSPEND_FREQ + profileName, suspendFreq);
 			editor.putString(Settings.AUDIO_MIN_FREQ + profileName, audioFreq);
+			editor.putBoolean(Settings.FIX_AUDIO_LAG + profileName, fixAudioLag);
 			editor.commit();
 			refreshProfilesList();
 		}
@@ -618,8 +621,11 @@ public class MainActivity extends FragmentActivity implements
 		String selectedProfile = (String) profilesAdapter.getItem(pos);
 		dialog = ProgressDialog.show(this, getResources().getString(R.string.please_wait), getResources().getString(R.string.being_saved));
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		Editor editor = sharedPreferences.edit();
 		if(pos == 0)
 		{
+			editor.putBoolean(Settings.FIX_AUDIO_LAG, false);
+			editor.commit();
 			String[] files = {
 				FileNames.CPU_USER_CAP,
 				FileNames.ENABLE_OC,
@@ -642,8 +648,10 @@ public class MainActivity extends FragmentActivity implements
 			task.addListener(this);
 			task.execute();
 		}
-		if(pos == 1)
+		else if(pos == 1)
 		{
+			editor.putBoolean(Settings.FIX_AUDIO_LAG, false);
+			editor.commit();
 			String[] files = {
 				FileNames.CPU_USER_CAP,
 				FileNames.ENABLE_OC,
@@ -675,6 +683,8 @@ public class MainActivity extends FragmentActivity implements
 			String maxCpus = sharedPreferences.getString(Settings.MAX_CPUS, "4");
 			String suspendFreq = sharedPreferences.getString(Settings.SUSPEND_FREQ, DefaultSettings.SUSPEND_FREQ);
 			String audioFreq = sharedPreferences.getString(Settings.AUDIO_MIN_FREQ, DefaultSettings.AUDIO_MIN_FREQ);
+			editor.putBoolean(Settings.FIX_AUDIO_LAG, sharedPreferences.getBoolean(Settings.FIX_AUDIO_LAG + selectedProfile, false));
+			editor.commit();
 			String[] files = {
 					FileNames.CPU_USER_CAP,
 					FileNames.ENABLE_OC,

@@ -47,22 +47,28 @@ public class GetHardwareInfoTask extends AsyncTask<String, Void, Void>{
 			File file = new File(params[i]);
 			StringBuilder content = new StringBuilder();
 			String line = "";
-			try 
+			if(file.exists())
 			{
-				// Read it.
-				BufferedReader br = new BufferedReader(new FileReader(file));
-				while((line = br.readLine()) != null)
+				try 
 				{
-					content.append(line);
-					content.append("\n");
+					// Read it.
+					BufferedReader br = new BufferedReader(new FileReader(file));
+					while((line = br.readLine()) != null)
+					{
+						content.append(line);
+						content.append("\n");
+					}
+					content.deleteCharAt(content.length()-1);
+				} catch (IOException e) {
+					e.printStackTrace();
+					content.append("Error");
 				}
-				
-			} catch (IOException e) {
-				e.printStackTrace();
-				content.append("Error\n");
+			}
+			else
+			{
+				content.append("Error");
 			}
 			// Remove the last new line character.
-			content.deleteCharAt(content.length()-1);
 			// And write the result in result.
 			result[i] = content.toString();
 		}
