@@ -232,7 +232,7 @@ public class MainActivity extends FragmentActivity implements
 		{
 			if(result[3].indexOf("000") == -1) 
 				currentFrequencyPos = 0;
-			else if(result[3].indexOf(freqencies[i]) != -1)
+			else if(result[3].compareTo(freqencies[i]) == 0)
 				currentFrequencyPos = i + 1;
 			frequenciesShort[i+1] = freqencies[i].replaceFirst("000", "") + getResources().getString(R.string.mhz);
 		}
@@ -247,7 +247,7 @@ public class MainActivity extends FragmentActivity implements
 		// in the spinner.
 		for(int i = 0; i < governors.length; i++)
 		{
-			if(result[2].indexOf(governors[i]) != -1)
+			if(result[2].compareTo(governors[i]) == 0)
 				governorSpinner.setSelection(i);
 		}
 		
@@ -265,7 +265,7 @@ public class MainActivity extends FragmentActivity implements
 		ioSchedulerSpinner.setSelection(currentIOScheduler);
 		
 		// If overclock is one turn the switch on.
-		if(result[5].indexOf('1') != -1) ocSwitch.setChecked(true);
+		if(result[5].compareTo("1") == 0) ocSwitch.setChecked(true);
 		else ocSwitch.setChecked(false);
 		onOverclockSwitchClick(ocSwitch);
 		
@@ -384,7 +384,6 @@ public class MainActivity extends FragmentActivity implements
 			selectedFrequencyCap = "0";
 		else 
 			selectedFrequencyCap = selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000");
-		System.out.println(selectedFrequencyCap);
 		String selectedGovernor = (String)(((Spinner) findViewById(R.id.governorSpinner)).getSelectedItem());
 		Boolean onBootEnabled = (Boolean)(((Switch) findViewById(R.id.setCpuSettingsOnBootSwitch)).isChecked());
 		int ocEnabled = 0;

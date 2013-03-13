@@ -76,14 +76,11 @@ public class SetHardwareInfoTask extends AsyncTask<String[], Void, Void>
 	protected Void doInBackground(String[]... params) {
 		for(int i = 0; i < files.length; i++)
 		{
-			System.out.println("GOTYA" + values[i]);
-			
 			// Run the commands as root.
 			String[] command = {"su", "-c", "echo \"" + values[i] + "\" > " + files[i]};
 			
 			File f=new File(files[i]);
 			if(f.exists()){
-				System.out.println(StringUtils.join(command, " "));
 				ShellCommand.run(command);
 			}
 		}
