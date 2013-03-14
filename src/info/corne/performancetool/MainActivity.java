@@ -273,6 +273,7 @@ public class MainActivity extends FragmentActivity implements
 			maxCpusSeek.setProgress((int) Float.parseFloat(result[6])-1);
 		} else {
 			maxCpusSeek.setVisibility(View.GONE);
+			((TextView) findViewById(R.id.maxCpusTextView)).setVisibility(View.GONE);
 		}
 		
 		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
