@@ -177,7 +177,8 @@ public class MainActivity extends FragmentActivity implements
 				FileNames.CPU_USER_CAP,
 				FileNames.IO_SCHEDULERS,
 				FileNames.ENABLE_OC,
-				FileNames.MAX_CPUS);
+				FileNames.MAX_CPUS_MPDEC,
+				FileNames.MAX_CPUS_QUIET);
 	}
 
 	@Override
@@ -269,8 +270,13 @@ public class MainActivity extends FragmentActivity implements
 		else ocSwitch.setChecked(false);
 		onOverclockSwitchClick(ocSwitch);
 		
-		if(!result[6].equals("Error")){
-			maxCpusSeek.setProgress((int) Float.parseFloat(result[6])-1);
+		if(!result[6].equals("Error") || !result[7].equals("Error")){
+			if(!result[6].equals("Error")){
+				maxCpusSeek.setProgress((int) Float.parseFloat(result[6])-1);
+			}
+			if(!result[7].equals("Error")){
+				maxCpusSeek.setProgress((int) Float.parseFloat(result[7])-1);
+			}
 		} else {
 			maxCpusSeek.setVisibility(View.GONE);
 			((TextView) findViewById(R.id.maxCpusTextView)).setVisibility(View.GONE);
@@ -396,13 +402,15 @@ public class MainActivity extends FragmentActivity implements
 				FileNames.CPU_USER_CAP,
 				FileNames.ENABLE_OC,
 				FileNames.SCALING_GOVERNOR,
-				FileNames.MAX_CPUS
+				FileNames.MAX_CPUS_MPDEC,
+				FileNames.MAX_CPUS_QUIET
 		};
 		String[] values = {
 				selectedFrequencyCap,
 				"" + ocEnabled,
 				selectedGovernor,
-				maxCpus + ""
+				maxCpus + "",
+				maxCpus + ""		
 		};
 		new SetHardwareInfoTask(files, values, dialog).execute();
 		// And store them in the shared preferences.
@@ -631,7 +639,8 @@ public class MainActivity extends FragmentActivity implements
 				FileNames.ENABLE_OC,
 				FileNames.SCALING_GOVERNOR,
 				FileNames.IO_SCHEDULERS,
-				FileNames.MAX_CPUS,
+				FileNames.MAX_CPUS_MPDEC,
+				FileNames.MAX_CPUS_QUIET,
 				FileNames.SUSPEND_FREQ,
 				FileNames.AUDIO_MIN_FREQ
 			};
@@ -640,6 +649,7 @@ public class MainActivity extends FragmentActivity implements
 				DefaultSettings.ENABLE_OC,
 				DefaultSettings.SCALING_GOVERNOR,
 				DefaultSettings.IO_SCHEDULERS,
+				DefaultSettings.MAX_CPUS,
 				DefaultSettings.MAX_CPUS,
 				DefaultSettings.SUSPEND_FREQ,
 				DefaultSettings.AUDIO_MIN_FREQ
@@ -657,7 +667,8 @@ public class MainActivity extends FragmentActivity implements
 				FileNames.ENABLE_OC,
 				FileNames.SCALING_GOVERNOR,
 				FileNames.IO_SCHEDULERS,
-				FileNames.MAX_CPUS,
+				FileNames.MAX_CPUS_MPDEC,
+				FileNames.MAX_CPUS_QUIET,				
 				FileNames.SUSPEND_FREQ,
 				FileNames.AUDIO_MIN_FREQ
 			};
@@ -666,6 +677,7 @@ public class MainActivity extends FragmentActivity implements
 				PowerSettings.ENABLE_OC,
 				PowerSettings.SCALING_GOVERNOR,
 				PowerSettings.IO_SCHEDULERS,
+				PowerSettings.MAX_CPUS,
 				PowerSettings.MAX_CPUS,
 				DefaultSettings.SUSPEND_FREQ,
 				DefaultSettings.AUDIO_MIN_FREQ
@@ -690,7 +702,8 @@ public class MainActivity extends FragmentActivity implements
 					FileNames.ENABLE_OC,
 					FileNames.SCALING_GOVERNOR,
 					FileNames.IO_SCHEDULERS,
-					FileNames.MAX_CPUS,
+					FileNames.MAX_CPUS_MPDEC,
+					FileNames.MAX_CPUS_QUIET,
 					FileNames.SUSPEND_FREQ,
 					FileNames.AUDIO_MIN_FREQ
 			};
@@ -699,6 +712,7 @@ public class MainActivity extends FragmentActivity implements
 					ocEnabled,
 					selectedGovernor,
 					selectedScheduler,
+					maxCpus,
 					maxCpus,
 					suspendFreq,
 					audioFreq
