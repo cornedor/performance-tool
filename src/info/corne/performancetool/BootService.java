@@ -65,7 +65,8 @@ public class BootService extends Service{
 				String[] schedulerCommand = {"su", "-c", "echo " + selectedScheduler + " > " + FileNames.IO_SCHEDULERS };
 				String[] governorCommand = {"su", "-c", "echo " + selectedGovernor + " > " + FileNames.SCALING_GOVERNOR};
 				String[] ocCommand = {"su", "-c", "echo " + ocEnabled + " > " + FileNames.ENABLE_OC};
-				String[] maxCpusCommand = {"su", "-c", "echo " + maxCpus + " > " + FileNames.MAX_CPUS};
+				String[] maxCpusCommand1 = {"su", "-c", "echo " + maxCpus + " > " + FileNames.MAX_CPUS_MPDEC};
+				String[] maxCpusCommand2 = {"su", "-c", "echo " + maxCpus + " > " + FileNames.MAX_CPUS_QUIET};				
 				String[] suspendFreqCommand = {"su", "-c", "echo " + suspendFreq + " > " + FileNames.SUSPEND_FREQ};
 				String[] audioFreqCommand = {"su", "-c", "echo " + audioFreq + " > " + FileNames.AUDIO_MIN_FREQ};
 				
@@ -83,9 +84,14 @@ public class BootService extends Service{
 				if(f.exists())
 					ShellCommand.run(audioFreqCommand);
 				
-				f=new File(FileNames.MAX_CPUS);
+				f=new File(FileNames.MAX_CPUS_MPDEC);
 				if(f.exists())
-					ShellCommand.run(maxCpusCommand);
+					ShellCommand.run(maxCpusCommand1);
+					
+				f=new File(FileNames.MAX_CPUS_QUIET);
+				if(f.exists())
+					ShellCommand.run(maxCpusCommand2);
+
 			}
 			return null;
 		}
