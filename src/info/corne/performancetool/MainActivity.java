@@ -178,7 +178,8 @@ public class MainActivity extends FragmentActivity implements
 				FileNames.IO_SCHEDULERS,
 				FileNames.ENABLE_OC,
 				FileNames.MAX_CPUS_MPDEC,
-				FileNames.MAX_CPUS_QUIET);
+				FileNames.MAX_CPUS_QUIET,
+				FileNames.SUSPEND_FREQ);
 	}
 
 	@Override
@@ -216,6 +217,7 @@ public class MainActivity extends FragmentActivity implements
 		// Get the views
 		Spinner governorSpinner = (Spinner) findViewById(R.id.governorSpinner);
 		Spinner frequencyCapSpinner = (Spinner) findViewById(R.id.frequencyCapSpinner);
+		Spinner suspendCapSpinner = (Spinner) findViewById(R.id.suspendCapSpinner);
 		Spinner ioSchedulerSpinner = (Spinner) findViewById(R.id.ioSchedulerSpinner);
 		SeekBar maxCpusSeek = (SeekBar) findViewById(R.id.maxCpusSeek);
 		Switch ocSwitch = (Switch) findViewById(R.id.overclockSwitch);
@@ -224,23 +226,32 @@ public class MainActivity extends FragmentActivity implements
 		String[] freqencies = result[1].split(" ");
 		// frequenciesShort will be Disabled + all the frequencies in MHz.
 		String[] frequenciesShort = new String[freqencies.length+1];
+		String[] suspendFreqsShort = new String[freqencies.length];
+
 		frequenciesShort[0] = "Disabled";
 		ioSchedulers = result[4].split(" ");
 		int currentFrequencyPos = freqencies.length-1;
+		int currentSuspendPos = 3;
 		int currentIOScheduler = ioSchedulers.length-1;
 		// Will loop trough the frequencies and convert them to MHz.
 		for(int i = 0; i < freqencies.length; i++)
 		{
-			if(result[3].indexOf("000") == -1) 
+			if(result[3].indexOf("000") == -1)
 				currentFrequencyPos = 0;
 			else if(result[3].compareTo(freqencies[i]) == 0)
 				currentFrequencyPos = i + 1;
+			if(result[8].compareTo(freqencies[i]) == 0)
+				currentSuspendPos = i;
+
 			frequenciesShort[i+1] = freqencies[i].replaceFirst("000", "") + getResources().getString(R.string.mhz);
+			suspendFreqsShort[i] = freqencies[i].replaceFirst("000", "") + getResources().getString(R.string.mhz);
 		}
 		// And that will also be stored in the adapter.
 		frequencyCapSpinner.setAdapter(generateAdapter(frequenciesShort));
+		suspendCapSpinner.setAdapter(generateAdapter(suspendFreqsShort));
 		// And the current selected freq will be selected.
 		frequencyCapSpinner.setSelection(currentFrequencyPos);
+		suspendCapSpinner.setSelection(currentSuspendPos);
 		
 		// All the governors will be add to the spinner.
 		governorSpinner.setAdapter(generateAdapter(governors));
@@ -285,7 +296,6 @@ public class MainActivity extends FragmentActivity implements
 		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		
 		((Switch) findViewById(R.id.setCpuSettingsOnBootSwitch)).setChecked(pm.getBoolean(Settings.SET_ON_BOOT_SETTING, false));
-		((Switch) findViewById(R.id.audioLagSwitch)).setChecked(pm.getBoolean(Settings.FIX_AUDIO_LAG, false));
 		dialog.dismiss();
 		
 		refreshProfilesList();
@@ -434,9 +444,9 @@ public class MainActivity extends FragmentActivity implements
 	{
 		dialog = ProgressDialog.show(this, getResources().getString(R.string.please_wait), getResources().getString(R.string.being_saved));
 		String selectedScheduler = (String)(((Spinner) findViewById(R.id.ioSchedulerSpinner)).getSelectedItem());
-		boolean fixAudioLag = ((Switch)findViewById(R.id.audioLagSwitch)).isChecked();
-		String suspendFreq = fixAudioLag ? DefaultSettings.SUSPEND_FREQ_FIX : DefaultSettings.SUSPEND_FREQ;
-		String audioFreq = fixAudioLag ? DefaultSettings.AUDIO_MIN_FREQ_FIX : DefaultSettings.AUDIO_MIN_FREQ;
+		String suspendFreq = (String)(((Spinner) findViewById(R.id.suspendCapSpinner)).getSelectedItem());
+		suspendFreq = suspendFreq.replace(getResources().getString(R.string.mhz), "000");
+		String audioFreq = DefaultSettings.AUDIO_MIN_FREQ;
 		
 		/**
 		 * @TODO: Do this a bit better so more can be added.
@@ -458,7 +468,6 @@ public class MainActivity extends FragmentActivity implements
 		ed.putString(Settings.SELECTED_SCHEDULER_SETTING, selectedScheduler);
 		ed.putString(Settings.SUSPEND_FREQ, suspendFreq);
 		ed.putString(Settings.AUDIO_MIN_FREQ, audioFreq);
-		ed.putBoolean(Settings.FIX_AUDIO_LAG, fixAudioLag);
 		ed.commit();
 	}
 	/**
@@ -483,9 +492,9 @@ public class MainActivity extends FragmentActivity implements
 		int maxCpus = ((SeekBar) findViewById(R.id.maxCpusSeek)).getProgress() + 1;
 		int ocEnabled = 0;
 		if(((Switch)findViewById(R.id.overclockSwitch)).isChecked()) ocEnabled = 1;
-		boolean fixAudioLag = ((Switch)findViewById(R.id.audioLagSwitch)).isChecked();
-		String suspendFreq = fixAudioLag ? DefaultSettings.SUSPEND_FREQ_FIX : DefaultSettings.SUSPEND_FREQ;
-		String audioFreq = fixAudioLag ? DefaultSettings.AUDIO_MIN_FREQ_FIX : DefaultSettings.AUDIO_MIN_FREQ;
+		//boolean fixAudioLag = ((Switch)findViewById(R.id.audioLagSwitch)).isChecked();
+		String suspendFreq = (String)(((Spinner) findViewById(R.id.suspendCapSpinner)).getSelectedItem());
+		String audioFreq = DefaultSettings.AUDIO_MIN_FREQ;
 		
 		EditText profileNameInput = (EditText) findViewById(R.id.profileNameInput);
 		String profileName = profileNameInput.getText().toString();
@@ -511,9 +520,8 @@ public class MainActivity extends FragmentActivity implements
 			editor.putString(Settings.SELECTED_GOV_SETTING + profileName, selectedGovernor);
 			editor.putString(Settings.SELECTED_SCHEDULER_SETTING + profileName, selectedScheduler);
 			editor.putString(Settings.MAX_CPUS + profileName, maxCpus + "");
-			editor.putString(Settings.SUSPEND_FREQ + profileName, suspendFreq);
+			editor.putString(Settings.SUSPEND_FREQ + profileName, suspendFreq.replace(getResources().getString(R.string.mhz), "000"));
 			editor.putString(Settings.AUDIO_MIN_FREQ + profileName, audioFreq);
-			editor.putBoolean(Settings.FIX_AUDIO_LAG + profileName, fixAudioLag);
 			editor.commit();
 			refreshProfilesList();
 		}
