@@ -11,4 +11,6 @@ public interface FileNames {
 	public static final String MAX_CPUS_QUIET = "/sys/devices/system/cpu/cpuquiet/tegra_cpuquiet/max_cpus";	
 	public static final String SUSPEND_FREQ = "/sys/module/cpu_tegra/parameters/suspend_cap_freq";
 	public static final String AUDIO_MIN_FREQ = "/sys/module/snd_soc_tlv320aic3008/parameters/audio_min_freq";
+	public static final String CPUQUIET_AVAILABLE_GOVERNORS = "/sys/devices/system/cpu/cpuquiet/available_governors";
+	public static final String CPUQUIET_GOVERNOR = "/sys/devices/system/cpu/cpuquiet/current_governor";
 }
