@@ -34,9 +34,11 @@
     <string name="delete">Delete</string>
     <string name="default_profile">Default</string>
     <string name="power_profile">Power Save</string>
+    <string name="audio_profile">Audio Profile</string>
     <string name="default_no_remove">You can\'t remove the default profile.</string>
     <string name="volts">CPU</string>
     <string name="change_volts">Change volts</string>
     <string name="warning">Warning</string>
-    <string name="suspend_cap">Screen Off Frequency Cap</string>
+    <string name="suspend_cap">Screen off frequency cap</string>
+    <string name="audio_cap">Audio min frequency</string>
 </resources>
