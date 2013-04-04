@@ -10,4 +10,5 @@ public interface Settings {
 	public static final String MAX_CPUS = "info.corne.performancetool.maxCpus";
 	public static final String SUSPEND_FREQ = "info.corne.performancetool.suspendFreq";
 	public static final String AUDIO_MIN_FREQ = "info.corne.performancetool.audioMinFreq";
+	public static final String CURRENT_WIDGET_PROFILE = "info.corne.performancetool.currentWidgetProfile";
 }

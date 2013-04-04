@@ -20,6 +20,8 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -44,6 +46,7 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.RemoteViews;
 import android.widget.SeekBar;
 import android.widget.EditText;
 import android.widget.ListAdapter;
@@ -663,6 +666,8 @@ public class MainActivity extends FragmentActivity implements
 		String selectedProfile = (String) profilesAdapter.getItem(pos);
 		dialog = ProgressDialog.show(this, getResources().getString(R.string.please_wait), getResources().getString(R.string.being_saved));
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		Editor editor = sharedPreferences.edit();
+		RemoteViews rv = new RemoteViews(getApplicationContext().getPackageName(), R.layout.widget_layout);
 		if(pos == 0)
 		{
 			String[] files = {
@@ -688,6 +693,8 @@ public class MainActivity extends FragmentActivity implements
 			SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
 			task.addListener(this);
 			task.execute();
+			editor.putInt(Settings.CURRENT_WIDGET_PROFILE, 0);
+			rv.setImageViewResource(R.id.widgetButton, R.drawable.widget_default);
 		}
 		else if(pos == 1)
 		{
@@ -714,32 +721,36 @@ public class MainActivity extends FragmentActivity implements
 			SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
 			task.addListener(this);
 			task.execute();
+			editor.putInt(Settings.CURRENT_WIDGET_PROFILE, 2);
+			rv.setImageViewResource(R.id.widgetButton, R.drawable.widget_power);
 		}
 		else if(pos == 2)
 		{
 			String[] files = {
-					FileNames.CPU_USER_CAP,
-					FileNames.ENABLE_OC,
-					FileNames.SCALING_GOVERNOR,
-					FileNames.IO_SCHEDULERS,
-					FileNames.MAX_CPUS_MPDEC,
-					FileNames.MAX_CPUS_QUIET,				
-					FileNames.SUSPEND_FREQ,
-					FileNames.AUDIO_MIN_FREQ
-				};
-				String[] values = {
-					AudioSettings.CPU_USER_CAP,
-					AudioSettings.ENABLE_OC,
-					AudioSettings.SCALING_GOVERNOR,
-					AudioSettings.IO_SCHEDULERS,
-					AudioSettings.MAX_CPUS,
-					AudioSettings.MAX_CPUS,
-					AudioSettings.SUSPEND_FREQ,
-					AudioSettings.AUDIO_MIN_FREQ
-				};
-				SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
-				task.addListener(this);
-				task.execute();
+				FileNames.CPU_USER_CAP,
+				FileNames.ENABLE_OC,
+				FileNames.SCALING_GOVERNOR,
+				FileNames.IO_SCHEDULERS,
+				FileNames.MAX_CPUS_MPDEC,
+				FileNames.MAX_CPUS_QUIET,				
+				FileNames.SUSPEND_FREQ,
+				FileNames.AUDIO_MIN_FREQ
+			};
+			String[] values = {
+				AudioSettings.CPU_USER_CAP,
+				AudioSettings.ENABLE_OC,
+				AudioSettings.SCALING_GOVERNOR,
+				AudioSettings.IO_SCHEDULERS,
+				AudioSettings.MAX_CPUS,
+				AudioSettings.MAX_CPUS,
+				AudioSettings.SUSPEND_FREQ,
+				AudioSettings.AUDIO_MIN_FREQ
+			};
+			SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
+			task.addListener(this);
+			task.execute();
+			editor.putInt(Settings.CURRENT_WIDGET_PROFILE, 1);
+			rv.setImageViewResource(R.id.widgetButton, R.drawable.widget_audio);
 		}
 		else
 		{
@@ -773,7 +784,11 @@ public class MainActivity extends FragmentActivity implements
 			SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
 			task.addListener(this);
 			task.execute();
-			
+			editor.putInt(Settings.CURRENT_WIDGET_PROFILE, 0);
+			rv.setImageViewResource(R.id.widgetButton, R.drawable.widget_default);
 		}
+		editor.commit();
+		ComponentName cn = new ComponentName(getApplicationContext(), WidgetReceiver.class);
+		(AppWidgetManager.getInstance(getApplicationContext())).updateAppWidget(cn, rv);
 	}
 }

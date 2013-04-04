@@ -44,6 +44,11 @@ public class SetHardwareInfoTask extends AsyncTask<String[], Void, Void>
 	 * @param files files to write settings to.
 	 * @param values values that needs to be written to the files
 	 */
+	public SetHardwareInfoTask(String[] files, String[] values)
+	{
+		this.files = files;
+		this.values = values;
+	}
 	public SetHardwareInfoTask(String[] files, String[] values, ProgressDialog dialog)
 	{
 		this.files = files;
@@ -90,7 +95,7 @@ public class SetHardwareInfoTask extends AsyncTask<String[], Void, Void>
 	@Override
 	protected void onPostExecute(Void res)
 	{
-		dialog.dismiss();
+		if(this.dialog != null) dialog.dismiss();
 		if(this.refresh) "c".split("");
 	}
 
