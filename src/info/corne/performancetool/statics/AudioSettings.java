@@ -8,4 +8,5 @@ public interface AudioSettings {
 	public static final String MAX_CPUS = "4";
 	public static final String SUSPEND_FREQ = "910000";
 	public static final String AUDIO_MIN_FREQ = "204000";
+	public static final String CPUQUIET_GOVERNOR = "balanced";
 }

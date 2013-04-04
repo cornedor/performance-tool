@@ -181,7 +181,9 @@ public class MainActivity extends FragmentActivity implements
 				FileNames.MAX_CPUS_MPDEC,
 				FileNames.MAX_CPUS_QUIET,
 				FileNames.SUSPEND_FREQ,
-				FileNames.AUDIO_MIN_FREQ);
+				FileNames.AUDIO_MIN_FREQ,
+				FileNames.CPUQUIET_AVAILABLE_GOVERNORS,
+				FileNames.CPUQUIET_GOVERNOR);
 	}
 
 	@Override
@@ -231,7 +233,9 @@ public class MainActivity extends FragmentActivity implements
 		String[] frequenciesShort = new String[freqencies.length + 1];
 		String[] suspendFreqsShort = new String[freqencies.length + 1];
 		String[] audioFreqsShort = new String[freqencies.length + 1];
-
+		Spinner cpqGovernorSpinner = (Spinner) findViewById(R.id.cpqGovernorSpinner);
+		String[] cpqGovernors = result[10].split(" ");		
+	
 		frequenciesShort[0] = getResources().getString(R.string.disabled_string);
 		suspendFreqsShort[0] = getResources().getString(R.string.disabled_string);
 		audioFreqsShort[0] = getResources().getString(R.string.disabled_string);
@@ -312,7 +316,19 @@ public class MainActivity extends FragmentActivity implements
 			maxCpusSeek.setVisibility(View.GONE);
 			((TextView) findViewById(R.id.maxCpusTextView)).setVisibility(View.GONE);
 		}
-		
+
+		if(!result[11].equals("Error")){		
+			cpqGovernorSpinner.setAdapter(generateAdapter(cpqGovernors));
+			for(int i = 0; i < cpqGovernors.length; i++)
+			{
+				if(result[11].compareTo(cpqGovernors[i]) == 0)
+					cpqGovernorSpinner.setSelection(i);
+			}
+		} else {
+			cpqGovernorSpinner.setVisibility(View.GONE);
+			((TextView) findViewById(R.id.cpqGovernorTextView)).setVisibility(View.GONE);
+		}
+			
 		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		
 		((Switch) findViewById(R.id.setCpuSettingsOnBootSwitch)).setChecked(pm.getBoolean(Settings.SET_ON_BOOT_SETTING, false));
@@ -365,8 +381,6 @@ public class MainActivity extends FragmentActivity implements
 					message.append(getResources().getString(R.string.disabled_string));
 				message.append("\n" + getResources().getString(R.string.max_cpus) + ": ");
 				message.append(sharedPreferences.getString(Settings.MAX_CPUS + selectedItem, "4"));
-				message.append("\n" + getResources().getString(R.string.governor) + ": ");
-				message.append(sharedPreferences.getString(Settings.SELECTED_GOV_SETTING + selectedItem, "Undefined"));
 			}
 			Toast.makeText(this, message.toString(), Toast.LENGTH_LONG).show();
 			break;
@@ -426,7 +440,7 @@ public class MainActivity extends FragmentActivity implements
 		int ocEnabled = 0;
 		if(((Switch)findViewById(R.id.overclockSwitch)).isChecked()) 
 			ocEnabled = 1;
-		
+				
 		// And run the commands in a thread.
 		String[] files = {
 				FileNames.CPU_USER_CAP,
@@ -440,7 +454,7 @@ public class MainActivity extends FragmentActivity implements
 				"" + ocEnabled,
 				selectedGovernor,
 				maxCpus + "",
-				maxCpus + ""		
+				maxCpus + ""
 		};
 		new SetHardwareInfoTask(files, values, dialog).execute();
 		// And store them in the shared preferences.
@@ -474,16 +488,19 @@ public class MainActivity extends FragmentActivity implements
 			audioFreq = "0";
 		else 
 			audioFreq = audioFreq.replace(getResources().getString(R.string.mhz), "000");
-		
+		String selectedCPQGovernor = (String)(((Spinner) findViewById(R.id.cpqGovernorSpinner)).getSelectedItem());
+				
 		String[] values = {
 				selectedScheduler,
 				suspendFreq,
-				audioFreq
+				audioFreq,
+				selectedCPQGovernor
 		};
 		String[] files = {
 				FileNames.IO_SCHEDULERS,
 				FileNames.SUSPEND_FREQ,
-				FileNames.AUDIO_MIN_FREQ
+				FileNames.AUDIO_MIN_FREQ,
+				FileNames.CPUQUIET_GOVERNOR
 		};
 		new SetHardwareInfoTask(files, values, dialog).execute();
 		
@@ -492,6 +509,7 @@ public class MainActivity extends FragmentActivity implements
 		ed.putString(Settings.SELECTED_SCHEDULER_SETTING, selectedScheduler);
 		ed.putString(Settings.SUSPEND_FREQ, suspendFreq);
 		ed.putString(Settings.AUDIO_MIN_FREQ, audioFreq);
+		ed.putString(Settings.SELECTED_CPQGOV_SETTING, selectedCPQGovernor);
 		ed.commit();
 	}
 	/**
@@ -519,7 +537,8 @@ public class MainActivity extends FragmentActivity implements
 		//boolean fixAudioLag = ((Switch)findViewById(R.id.audioLagSwitch)).isChecked();
 		String suspendFreq = (String)(((Spinner) findViewById(R.id.suspendCapSpinner)).getSelectedItem());
 		String audioFreq = DefaultSettings.AUDIO_MIN_FREQ;
-		
+		String selectedCPQGovernor = (String)(((Spinner) findViewById(R.id.cpqGovernorSpinner)).getSelectedItem());
+				
 		EditText profileNameInput = (EditText) findViewById(R.id.profileNameInput);
 		String profileName = profileNameInput.getText().toString();
 		if(!profileName.isEmpty())
@@ -547,6 +566,7 @@ public class MainActivity extends FragmentActivity implements
 			editor.putString(Settings.MAX_CPUS + profileName, maxCpus + "");
 			editor.putString(Settings.SUSPEND_FREQ + profileName, suspendFreq.replace(getResources().getString(R.string.mhz), "000"));
 			editor.putString(Settings.AUDIO_MIN_FREQ + profileName, audioFreq);
+			editor.putString(Settings.SELECTED_CPQGOV_SETTING + profileName, selectedCPQGovernor);
 			editor.commit();
 			refreshProfilesList();
 		}
@@ -673,7 +693,8 @@ public class MainActivity extends FragmentActivity implements
 				FileNames.MAX_CPUS_MPDEC,
 				FileNames.MAX_CPUS_QUIET,
 				FileNames.SUSPEND_FREQ,
-				FileNames.AUDIO_MIN_FREQ
+				FileNames.AUDIO_MIN_FREQ,
+				FileNames.CPUQUIET_GOVERNOR
 			};
 			String[] values = {
 				DefaultSettings.CPU_USER_CAP,
@@ -683,7 +704,8 @@ public class MainActivity extends FragmentActivity implements
 				DefaultSettings.MAX_CPUS,
 				DefaultSettings.MAX_CPUS,
 				DefaultSettings.SUSPEND_FREQ,
-				DefaultSettings.AUDIO_MIN_FREQ
+				DefaultSettings.AUDIO_MIN_FREQ,
+				DefaultSettings.CPUQUIET_GOVERNOR
 			};
 			SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
 			task.addListener(this);
@@ -699,7 +721,8 @@ public class MainActivity extends FragmentActivity implements
 				FileNames.MAX_CPUS_MPDEC,
 				FileNames.MAX_CPUS_QUIET,				
 				FileNames.SUSPEND_FREQ,
-				FileNames.AUDIO_MIN_FREQ
+				FileNames.AUDIO_MIN_FREQ,
+				FileNames.CPUQUIET_GOVERNOR
 			};
 			String[] values = {
 				PowerSettings.CPU_USER_CAP,
@@ -709,8 +732,10 @@ public class MainActivity extends FragmentActivity implements
 				PowerSettings.MAX_CPUS,
 				PowerSettings.MAX_CPUS,
 				PowerSettings.SUSPEND_FREQ,
-				PowerSettings.AUDIO_MIN_FREQ
+				PowerSettings.AUDIO_MIN_FREQ,
+				PowerSettings.CPUQUIET_GOVERNOR			
 			};
+
 			SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
 			task.addListener(this);
 			task.execute();
@@ -725,7 +750,8 @@ public class MainActivity extends FragmentActivity implements
 					FileNames.MAX_CPUS_MPDEC,
 					FileNames.MAX_CPUS_QUIET,				
 					FileNames.SUSPEND_FREQ,
-					FileNames.AUDIO_MIN_FREQ
+					FileNames.AUDIO_MIN_FREQ,
+					FileNames.CPUQUIET_GOVERNOR
 				};
 				String[] values = {
 					AudioSettings.CPU_USER_CAP,
@@ -735,7 +761,8 @@ public class MainActivity extends FragmentActivity implements
 					AudioSettings.MAX_CPUS,
 					AudioSettings.MAX_CPUS,
 					AudioSettings.SUSPEND_FREQ,
-					AudioSettings.AUDIO_MIN_FREQ
+					AudioSettings.AUDIO_MIN_FREQ,
+					AudioSettings.CPUQUIET_GOVERNOR				
 				};
 				SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
 				task.addListener(this);
@@ -750,6 +777,7 @@ public class MainActivity extends FragmentActivity implements
 			String maxCpus = sharedPreferences.getString(Settings.MAX_CPUS, "4");
 			String suspendFreq = sharedPreferences.getString(Settings.SUSPEND_FREQ, DefaultSettings.SUSPEND_FREQ);
 			String audioFreq = sharedPreferences.getString(Settings.AUDIO_MIN_FREQ, DefaultSettings.AUDIO_MIN_FREQ);
+			String selectedCPQGovernor = sharedPreferences.getString(Settings.SELECTED_CPQGOV_SETTING + selectedProfile, "");
 			String[] files = {
 					FileNames.CPU_USER_CAP,
 					FileNames.ENABLE_OC,
@@ -758,8 +786,10 @@ public class MainActivity extends FragmentActivity implements
 					FileNames.MAX_CPUS_MPDEC,
 					FileNames.MAX_CPUS_QUIET,
 					FileNames.SUSPEND_FREQ,
-					FileNames.AUDIO_MIN_FREQ
+					FileNames.AUDIO_MIN_FREQ,
+					FileNames.CPUQUIET_GOVERNOR			
 			};
+	
 			String[] values = {
 					selectedFrequencyCap,
 					ocEnabled,
@@ -768,7 +798,8 @@ public class MainActivity extends FragmentActivity implements
 					maxCpus,
 					maxCpus,
 					suspendFreq,
-					audioFreq
+					audioFreq,
+					selectedCPQGovernor
 			};
 			SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
 			task.addListener(this);
