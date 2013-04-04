@@ -1,5 +1,25 @@
 package info.corne.performancetool;
-
+/**
+ * This class will handle all the widget stuff.
+ * 
+ * Copyright (C) 2013  Corné Dorrestijn
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ * 
+ * @author Corné Dorrestijn
+ *
+ */
 import info.corne.performancetool.statics.AudioSettings;
 import info.corne.performancetool.statics.DefaultSettings;
 import info.corne.performancetool.statics.FileNames;
@@ -130,7 +150,6 @@ public class WidgetReceiver extends AppWidgetProvider
 			
 			clickIntent.setAction(ACTION_CLICK);
 			clickIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetIds[i]);
-			// intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
 			clickIntent.setData(Uri.parse(clickIntent.toUri(Intent.URI_INTENT_SCHEME)));
 			PendingIntent clickPendingIntent = PendingIntent.getBroadcast(
 					context, 0, clickIntent, PendingIntent.FLAG_UPDATE_CURRENT);
