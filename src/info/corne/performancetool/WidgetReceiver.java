@@ -131,10 +131,10 @@ public class WidgetReceiver extends AppWidgetProvider
 				};
 				SetHardwareInfoTask task = new SetHardwareInfoTask(files, values);
 				task.execute();
-				Editor editor = sharedPreferences.edit();
-				editor.putInt(Settings.CURRENT_WIDGET_PROFILE, current);
-				editor.commit();
 			}
+			Editor editor = sharedPreferences.edit();
+			editor.putInt(Settings.CURRENT_WIDGET_PROFILE, current);
+			editor.commit();
 			ComponentName cn = new ComponentName(context, WidgetReceiver.class);
 			(AppWidgetManager.getInstance(context)).updateAppWidget(cn, rv);
 		}
