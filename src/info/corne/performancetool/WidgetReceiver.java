@@ -63,7 +63,8 @@ public class WidgetReceiver extends AppWidgetProvider
 					FileNames.MAX_CPUS_MPDEC,
 					FileNames.MAX_CPUS_QUIET,				
 					FileNames.SUSPEND_FREQ,
-					FileNames.AUDIO_MIN_FREQ
+					FileNames.AUDIO_MIN_FREQ,
+					FileNames.ENABLE_LP_OC
 				};
 				String[] values = {
 					AudioSettings.CPU_USER_CAP,
@@ -73,7 +74,8 @@ public class WidgetReceiver extends AppWidgetProvider
 					AudioSettings.MAX_CPUS,
 					AudioSettings.MAX_CPUS,
 					AudioSettings.SUSPEND_FREQ,
-					AudioSettings.AUDIO_MIN_FREQ
+					AudioSettings.AUDIO_MIN_FREQ,
+					AudioSettings.ENABLE_LP_OC
 				};
 				SetHardwareInfoTask task = new SetHardwareInfoTask(files, values);
 				task.execute();
@@ -90,7 +92,8 @@ public class WidgetReceiver extends AppWidgetProvider
 					FileNames.MAX_CPUS_MPDEC,
 					FileNames.MAX_CPUS_QUIET,				
 					FileNames.SUSPEND_FREQ,
-					FileNames.AUDIO_MIN_FREQ
+					FileNames.AUDIO_MIN_FREQ,
+					FileNames.ENABLE_LP_OC
 				};
 				String[] values = {
 					PowerSettings.CPU_USER_CAP,
@@ -100,7 +103,8 @@ public class WidgetReceiver extends AppWidgetProvider
 					PowerSettings.MAX_CPUS,
 					PowerSettings.MAX_CPUS,
 					PowerSettings.SUSPEND_FREQ,
-					PowerSettings.AUDIO_MIN_FREQ
+					PowerSettings.AUDIO_MIN_FREQ,
+					PowerSettings.ENABLE_LP_OC,
 				};
 				SetHardwareInfoTask task = new SetHardwareInfoTask(files, values);
 				task.execute();
@@ -117,7 +121,8 @@ public class WidgetReceiver extends AppWidgetProvider
 					FileNames.MAX_CPUS_MPDEC,
 					FileNames.MAX_CPUS_QUIET,
 					FileNames.SUSPEND_FREQ,
-					FileNames.AUDIO_MIN_FREQ
+					FileNames.AUDIO_MIN_FREQ,
+					FileNames.ENABLE_LP_OC
 				};
 				String[] values = {
 					DefaultSettings.CPU_USER_CAP,
@@ -127,7 +132,8 @@ public class WidgetReceiver extends AppWidgetProvider
 					DefaultSettings.MAX_CPUS,
 					DefaultSettings.MAX_CPUS,
 					DefaultSettings.SUSPEND_FREQ,
-					DefaultSettings.AUDIO_MIN_FREQ
+					DefaultSettings.AUDIO_MIN_FREQ,
+					DefaultSettings.ENABLE_LP_OC
 				};
 				SetHardwareInfoTask task = new SetHardwareInfoTask(files, values);
 				task.execute();
