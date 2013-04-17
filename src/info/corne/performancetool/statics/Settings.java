@@ -12,4 +12,5 @@ public interface Settings {
 	public static final String AUDIO_MIN_FREQ = "info.corne.performancetool.audioMinFreq";
 	public static final String SELECTED_CPQGOV_SETTING = "info.corne.performancetool.selectedCPQGovernor";
 	public static final String CURRENT_WIDGET_PROFILE = "info.corne.performancetool.currentWidgetProfile";
+	public static final String LP_OC_ENABLED = "info.corne.performancetool.lpOverclockEnabled";
 }

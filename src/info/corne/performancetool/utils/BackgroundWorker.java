@@ -27,6 +27,7 @@ public class BackgroundWorker extends AsyncTask<Context, Void, Void>
 			String maxCpus = sharedPreferences.getString(Settings.MAX_CPUS, "4");
 			String suspendFreq = sharedPreferences.getString(Settings.SUSPEND_FREQ, DefaultSettings.SUSPEND_FREQ);
 			String audioFreq = sharedPreferences.getString(Settings.AUDIO_MIN_FREQ, DefaultSettings.AUDIO_MIN_FREQ);
+			int lpOcEnabled = sharedPreferences.getInt(Settings.LP_OC_ENABLED, 0);
 			
 			String[] frequencyCommand = {"su", "-c", "echo " + selectedFrequencyCap + " > " + FileNames.CPU_USER_CAP};
 			String[] schedulerCommand = {"su", "-c", "echo " + selectedScheduler + " > " + FileNames.IO_SCHEDULERS };
@@ -36,7 +37,8 @@ public class BackgroundWorker extends AsyncTask<Context, Void, Void>
 			String[] maxCpusCommand2 = {"su", "-c", "echo " + maxCpus + " > " + FileNames.MAX_CPUS_QUIET};				
 			String[] suspendFreqCommand = {"su", "-c", "echo " + suspendFreq + " > " + FileNames.SUSPEND_FREQ};
 			String[] audioFreqCommand = {"su", "-c", "echo " + audioFreq + " > " + FileNames.AUDIO_MIN_FREQ};
-			
+			String[] lpOcCommand = {"su", "-c", "echo " + lpOcEnabled + " > " + FileNames.ENABLE_LP_OC};
+							
 			File f;
 			
 			ShellCommand.run(frequencyCommand);
@@ -59,6 +61,9 @@ public class BackgroundWorker extends AsyncTask<Context, Void, Void>
 			if(f.exists())
 				ShellCommand.run(maxCpusCommand2);
 
+			f=new File(FileNames.ENABLE_LP_OC);
+			if(f.exists())
+				ShellCommand.run(lpOcCommand);
 		}
 		return null;
 	}

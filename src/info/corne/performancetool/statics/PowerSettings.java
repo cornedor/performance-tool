@@ -8,5 +8,6 @@ public interface PowerSettings {
 	public static final String MAX_CPUS = "4";
 	public static final String SUSPEND_FREQ = "475000";
 	public static final String AUDIO_MIN_FREQ = "102000";
-	public static final String CPUQUIET_GOVERNOR = "balanced";
+	public static final String CPUQUIET_GOVERNOR = "rq_stats";
+	public static final String ENABLE_LP_OC = "0";
 }

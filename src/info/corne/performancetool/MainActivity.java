@@ -186,7 +186,8 @@ public class MainActivity extends FragmentActivity implements
 				FileNames.SUSPEND_FREQ,
 				FileNames.AUDIO_MIN_FREQ,
 				FileNames.CPUQUIET_AVAILABLE_GOVERNORS,
-				FileNames.CPUQUIET_GOVERNOR);
+				FileNames.CPUQUIET_GOVERNOR,
+				FileNames.ENABLE_LP_OC);
 	}
 
 	@Override
@@ -229,6 +230,8 @@ public class MainActivity extends FragmentActivity implements
 		Spinner ioSchedulerSpinner = (Spinner) findViewById(R.id.ioSchedulerSpinner);
 		SeekBar maxCpusSeek = (SeekBar) findViewById(R.id.maxCpusSeek);
 		Switch ocSwitch = (Switch) findViewById(R.id.overclockSwitch);
+		Switch lpOcSwitch = (Switch) findViewById(R.id.lpOverclockSwitch);
+		
 		// The returned data will be stored in their variables.
 		String[] governors = result[0].split(" ");
 		String[] freqencies = result[1].split(" ");
@@ -331,6 +334,16 @@ public class MainActivity extends FragmentActivity implements
 			cpqGovernorSpinner.setVisibility(View.GONE);
 			((TextView) findViewById(R.id.cpqGovernorTextView)).setVisibility(View.GONE);
 		}
+
+		if(!result[12].equals("Error")){
+			// If lp overclock is one turn the switch on.
+			if(result[12].compareTo("1") == 0) lpOcSwitch.setChecked(true);
+			else lpOcSwitch.setChecked(false);
+			onLpOverclockSwitchClick(lpOcSwitch);
+		} else {
+			lpOcSwitch.setVisibility(View.GONE);
+			((TextView) findViewById(R.id.lpOverclockInfo)).setVisibility(View.GONE);
+		}
 			
 		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		
@@ -420,6 +433,23 @@ public class MainActivity extends FragmentActivity implements
 			overclockInfo.setText(getResources().getString(R.string.allow_overclock_off));
 		
 	}
+
+	/**
+	 * If the lp overclock switch is clicked this function
+	 * will change the textview containing some information.
+	 * @param view
+	 */
+	public void onLpOverclockSwitchClick(View view)
+	{
+		Switch lpOcSwitch = (Switch) view;
+		TextView lpOverclockInfo = (TextView) findViewById(R.id.lpOverclockInfo);
+		if(lpOcSwitch.isChecked())
+			lpOverclockInfo.setText(getResources().getString(R.string.allow_lpoverclock_on));
+		else 
+			lpOverclockInfo.setText(getResources().getString(R.string.allow_lpoverclock_off));
+		
+	}
+	
 	/**
 	 * When the apply button is clicked in the CPU tab this
 	 * function will be triggered, this function will then
@@ -443,6 +473,10 @@ public class MainActivity extends FragmentActivity implements
 		int ocEnabled = 0;
 		if(((Switch)findViewById(R.id.overclockSwitch)).isChecked()) 
 			ocEnabled = 1;
+
+		int lpOcEnabled = 0;
+		if(((Switch)findViewById(R.id.lpOverclockSwitch)).isChecked()) 
+			lpOcEnabled = 1;
 				
 		// And run the commands in a thread.
 		String[] files = {
@@ -450,14 +484,16 @@ public class MainActivity extends FragmentActivity implements
 				FileNames.ENABLE_OC,
 				FileNames.SCALING_GOVERNOR,
 				FileNames.MAX_CPUS_MPDEC,
-				FileNames.MAX_CPUS_QUIET
+				FileNames.MAX_CPUS_QUIET,
+				FileNames.ENABLE_LP_OC
 		};
 		String[] values = {
 				selectedFrequencyCap,
 				"" + ocEnabled,
 				selectedGovernor,
 				maxCpus + "",
-				maxCpus + ""
+				maxCpus + "",
+				"" + lpOcEnabled
 		};
 		new SetHardwareInfoTask(files, values, dialog).execute();
 		// And store them in the shared preferences.
@@ -468,6 +504,7 @@ public class MainActivity extends FragmentActivity implements
 		ed.putBoolean(Settings.SET_ON_BOOT_SETTING, onBootEnabled);
 		ed.putInt(Settings.OC_ENABLED, ocEnabled);
 		ed.putString(Settings.MAX_CPUS, maxCpus + "");
+		ed.putInt(Settings.LP_OC_ENABLED, lpOcEnabled);
 		ed.commit();
 	}
 	/**
@@ -541,6 +578,8 @@ public class MainActivity extends FragmentActivity implements
 		String suspendFreq = (String)(((Spinner) findViewById(R.id.suspendCapSpinner)).getSelectedItem());
 		String audioFreq = DefaultSettings.AUDIO_MIN_FREQ;
 		String selectedCPQGovernor = (String)(((Spinner) findViewById(R.id.cpqGovernorSpinner)).getSelectedItem());
+		int lpOcEnabled = 0;
+		if(((Switch)findViewById(R.id.lpOverclockSwitch)).isChecked()) lpOcEnabled = 1;
 				
 		EditText profileNameInput = (EditText) findViewById(R.id.profileNameInput);
 		String profileName = profileNameInput.getText().toString();
@@ -570,6 +609,7 @@ public class MainActivity extends FragmentActivity implements
 			editor.putString(Settings.SUSPEND_FREQ + profileName, suspendFreq.replace(getResources().getString(R.string.mhz), "000"));
 			editor.putString(Settings.AUDIO_MIN_FREQ + profileName, audioFreq);
 			editor.putString(Settings.SELECTED_CPQGOV_SETTING + profileName, selectedCPQGovernor);
+			editor.putString(Settings.LP_OC_ENABLED + profileName, "" + lpOcEnabled);
 			editor.commit();
 			refreshProfilesList();
 		}
@@ -699,7 +739,8 @@ public class MainActivity extends FragmentActivity implements
 				FileNames.MAX_CPUS_QUIET,
 				FileNames.SUSPEND_FREQ,
 				FileNames.AUDIO_MIN_FREQ,
-				FileNames.CPUQUIET_GOVERNOR
+				FileNames.CPUQUIET_GOVERNOR,
+				FileNames.ENABLE_LP_OC
 			};
 			String[] values = {
 				DefaultSettings.CPU_USER_CAP,
@@ -710,7 +751,8 @@ public class MainActivity extends FragmentActivity implements
 				DefaultSettings.MAX_CPUS,
 				DefaultSettings.SUSPEND_FREQ,
 				DefaultSettings.AUDIO_MIN_FREQ,
-				DefaultSettings.CPUQUIET_GOVERNOR
+				DefaultSettings.CPUQUIET_GOVERNOR,
+				DefaultSettings.ENABLE_LP_OC
 			};
 			SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
 			task.addListener(this);
@@ -729,7 +771,8 @@ public class MainActivity extends FragmentActivity implements
 				FileNames.MAX_CPUS_QUIET,				
 				FileNames.SUSPEND_FREQ,
 				FileNames.AUDIO_MIN_FREQ,
-				FileNames.CPUQUIET_GOVERNOR
+				FileNames.CPUQUIET_GOVERNOR,
+				FileNames.ENABLE_LP_OC
 			};
 			String[] values = {
 				PowerSettings.CPU_USER_CAP,
@@ -740,7 +783,8 @@ public class MainActivity extends FragmentActivity implements
 				PowerSettings.MAX_CPUS,
 				PowerSettings.SUSPEND_FREQ,
 				PowerSettings.AUDIO_MIN_FREQ,
-				PowerSettings.CPUQUIET_GOVERNOR			
+				PowerSettings.CPUQUIET_GOVERNOR,
+				PowerSettings.ENABLE_LP_OC
 			};
 
 			SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
@@ -759,7 +803,8 @@ public class MainActivity extends FragmentActivity implements
 				FileNames.MAX_CPUS_MPDEC,
 				FileNames.MAX_CPUS_QUIET,				
 				FileNames.SUSPEND_FREQ,
-				FileNames.AUDIO_MIN_FREQ
+				FileNames.AUDIO_MIN_FREQ,
+				FileNames.ENABLE_LP_OC
 			};
 			String[] values = {
 				AudioSettings.CPU_USER_CAP,
@@ -769,7 +814,8 @@ public class MainActivity extends FragmentActivity implements
 				AudioSettings.MAX_CPUS,
 				AudioSettings.MAX_CPUS,
 				AudioSettings.SUSPEND_FREQ,
-				AudioSettings.AUDIO_MIN_FREQ
+				AudioSettings.AUDIO_MIN_FREQ,
+				AudioSettings.ENABLE_LP_OC
 			};
 			SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
 			task.addListener(this);
@@ -787,6 +833,8 @@ public class MainActivity extends FragmentActivity implements
 			String suspendFreq = sharedPreferences.getString(Settings.SUSPEND_FREQ, DefaultSettings.SUSPEND_FREQ);
 			String audioFreq = sharedPreferences.getString(Settings.AUDIO_MIN_FREQ, DefaultSettings.AUDIO_MIN_FREQ);
 			String selectedCPQGovernor = sharedPreferences.getString(Settings.SELECTED_CPQGOV_SETTING + selectedProfile, "");
+			String lpOcEnabled = sharedPreferences.getString(Settings.LP_OC_ENABLED + selectedProfile, "0");
+			
 			String[] files = {
 					FileNames.CPU_USER_CAP,
 					FileNames.ENABLE_OC,
@@ -796,7 +844,8 @@ public class MainActivity extends FragmentActivity implements
 					FileNames.MAX_CPUS_QUIET,
 					FileNames.SUSPEND_FREQ,
 					FileNames.AUDIO_MIN_FREQ,
-					FileNames.CPUQUIET_GOVERNOR			
+					FileNames.CPUQUIET_GOVERNOR,
+					FileNames.ENABLE_LP_OC
 			};
 	
 			String[] values = {
@@ -808,7 +857,8 @@ public class MainActivity extends FragmentActivity implements
 					maxCpus,
 					suspendFreq,
 					audioFreq,
-					selectedCPQGovernor
+					selectedCPQGovernor,
+					lpOcEnabled
 			};
 			SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
 			task.addListener(this);

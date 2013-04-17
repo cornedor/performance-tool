@@ -80,6 +80,19 @@
         android:text="@string/allow_overclock_off" />
 
     <Switch
+        android:id="@+id/lpOverclockSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onLpOverclockSwitchClick"
+        android:text="@string/allow_lpoverclock" />
+
+    <TextView
+        android:id="@+id/lpOverclockInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/allow_lpoverclock_off" />
+        
+    <Switch
         android:id="@+id/setCpuSettingsOnBootSwitch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
