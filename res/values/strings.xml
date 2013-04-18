@@ -42,4 +42,7 @@
     <string name="suspend_cap">Screen off frequency cap</string>
     <string name="audio_cap">Audio min frequency</string>
     <string name="cpq_governor">CPUQuiet Governor</string>
+    <string name="allow_lpoverclock">Allow LP Overclocking</string>
+    <string name="allow_lpoverclock_off">(Max: 475Mhz)</string>
+    <string name="allow_lpoverclock_on">(Max: 620Mhz)</string>  
 </resources>

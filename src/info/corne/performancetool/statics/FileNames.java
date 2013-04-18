@@ -13,4 +13,5 @@ public interface FileNames {
 	public static final String AUDIO_MIN_FREQ = "/sys/module/snd_soc_tlv320aic3008/parameters/audio_min_freq";
 	public static final String CPUQUIET_AVAILABLE_GOVERNORS = "/sys/devices/system/cpu/cpuquiet/available_governors";
 	public static final String CPUQUIET_GOVERNOR = "/sys/devices/system/cpu/cpuquiet/current_governor";
+	public static final String ENABLE_LP_OC = "/sys/module/cpu_tegra/parameters/enable_lp_oc";
 }
