@@ -354,6 +354,7 @@ public class MainActivity extends FragmentActivity implements
 		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		
 		((Switch) findViewById(R.id.setCpuSettingsOnBootSwitch)).setChecked(pm.getBoolean(Settings.SET_ON_BOOT_SETTING, false));
+		((CheckBox) findViewById(R.id.autoWifi)).setChecked(pm.getBoolean(Settings.AUTO_WIFI, false));
 		dialog.dismiss();
 		
 		refreshProfilesList();
