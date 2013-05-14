@@ -23,6 +23,7 @@ import android.app.ProgressDialog;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.AsyncTask;
@@ -46,6 +47,7 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.RemoteViews;
 import android.widget.SeekBar;
 import android.widget.EditText;
@@ -107,6 +109,10 @@ public class MainActivity extends FragmentActivity implements
 	protected void onCreate(Bundle savedInstanceState) {
 		
 		super.onCreate(savedInstanceState);
+		
+		Intent service2 = new Intent(getApplicationContext(), UpdateService.class);
+		getApplicationContext().startService(service2);
+		
 		setContentView(R.layout.activity_main);
 
 		// Set up the action bar.
@@ -520,6 +526,7 @@ public class MainActivity extends FragmentActivity implements
 		String selectedScheduler = (String)(((Spinner) findViewById(R.id.ioSchedulerSpinner)).getSelectedItem());
 		String suspendFreq = (String)(((Spinner) findViewById(R.id.suspendCapSpinner)).getSelectedItem());
 		String audioFreq = (String)(((Spinner) findViewById(R.id.audioCapSpinner)).getSelectedItem());
+		boolean autoWifi = ((CheckBox) findViewById(R.id.autoWifi)).isChecked();
 		if(suspendFreq.compareTo(getResources().getString(R.string.disabled_string)) == 0)
 			suspendFreq = "0";
 		else
@@ -550,6 +557,7 @@ public class MainActivity extends FragmentActivity implements
 		ed.putString(Settings.SUSPEND_FREQ, suspendFreq);
 		ed.putString(Settings.AUDIO_MIN_FREQ, audioFreq);
 		ed.putString(Settings.SELECTED_CPQGOV_SETTING, selectedCPQGovernor);
+		ed.putBoolean(Settings.AUTO_WIFI, autoWifi);
 		ed.commit();
 	}
 	/**
@@ -578,7 +586,9 @@ public class MainActivity extends FragmentActivity implements
 		String suspendFreq = (String)(((Spinner) findViewById(R.id.suspendCapSpinner)).getSelectedItem());
 		String audioFreq = DefaultSettings.AUDIO_MIN_FREQ;
 		String selectedCPQGovernor = (String)(((Spinner) findViewById(R.id.cpqGovernorSpinner)).getSelectedItem());
+		boolean autoWifi = ((CheckBox) findViewById(R.id.autoWifi)).isChecked();
 		int lpOcEnabled = 0;
+		
 		if(((Switch)findViewById(R.id.lpOverclockSwitch)).isChecked()) lpOcEnabled = 1;
 				
 		EditText profileNameInput = (EditText) findViewById(R.id.profileNameInput);
@@ -610,6 +620,7 @@ public class MainActivity extends FragmentActivity implements
 			editor.putString(Settings.AUDIO_MIN_FREQ + profileName, audioFreq);
 			editor.putString(Settings.SELECTED_CPQGOV_SETTING + profileName, selectedCPQGovernor);
 			editor.putString(Settings.LP_OC_ENABLED + profileName, "" + lpOcEnabled);
+			editor.putBoolean(Settings.AUTO_WIFI, autoWifi);
 			editor.commit();
 			refreshProfilesList();
 		}
@@ -758,6 +769,7 @@ public class MainActivity extends FragmentActivity implements
 			task.addListener(this);
 			task.execute();
 			editor.putInt(Settings.CURRENT_WIDGET_PROFILE, 0);
+			editor.putBoolean(Settings.AUTO_WIFI, false);
 			rv.setImageViewResource(R.id.widgetButton, R.drawable.widget_default);
 		}
 		else if(pos == 1)
@@ -791,6 +803,7 @@ public class MainActivity extends FragmentActivity implements
 			task.addListener(this);
 			task.execute();
 			editor.putInt(Settings.CURRENT_WIDGET_PROFILE, 2);
+			editor.putBoolean(Settings.AUTO_WIFI, false);
 			rv.setImageViewResource(R.id.widgetButton, R.drawable.widget_power);
 		}
 		else if(pos == 2)
@@ -821,6 +834,7 @@ public class MainActivity extends FragmentActivity implements
 			task.addListener(this);
 			task.execute();
 			editor.putInt(Settings.CURRENT_WIDGET_PROFILE, 1);
+			editor.putBoolean(Settings.AUTO_WIFI, false);
 			rv.setImageViewResource(R.id.widgetButton, R.drawable.widget_audio);
 		}
 		else
@@ -834,6 +848,7 @@ public class MainActivity extends FragmentActivity implements
 			String audioFreq = sharedPreferences.getString(Settings.AUDIO_MIN_FREQ, DefaultSettings.AUDIO_MIN_FREQ);
 			String selectedCPQGovernor = sharedPreferences.getString(Settings.SELECTED_CPQGOV_SETTING + selectedProfile, "");
 			String lpOcEnabled = sharedPreferences.getString(Settings.LP_OC_ENABLED + selectedProfile, "0");
+			boolean autoWifi = sharedPreferences.getBoolean(Settings.AUTO_WIFI, false);
 			
 			String[] files = {
 					FileNames.CPU_USER_CAP,
@@ -864,6 +879,7 @@ public class MainActivity extends FragmentActivity implements
 			task.addListener(this);
 			task.execute();
 			editor.putInt(Settings.CURRENT_WIDGET_PROFILE, 0);
+			editor.putBoolean(Settings.AUTO_WIFI, autoWifi);
 			rv.setImageViewResource(R.id.widgetButton, R.drawable.widget_default);
 		}
 		editor.commit();

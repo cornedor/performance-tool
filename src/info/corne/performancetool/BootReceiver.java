@@ -27,6 +27,8 @@ public class BootReceiver extends BroadcastReceiver{
 	public void onReceive(Context context, Intent intent) {
 		Intent service = new Intent(context, BootService.class);
 		context.startService(service);
+		Intent service2 = new Intent(context, UpdateService.class);
+		context.startService(service2);
 	}
 
 }

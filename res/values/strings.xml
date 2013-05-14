@@ -44,5 +44,6 @@
     <string name="cpq_governor">CPUQuiet Governor</string>
     <string name="allow_lpoverclock">Allow LP Overclocking</string>
     <string name="allow_lpoverclock_off">(Max: 475Mhz)</string>
-    <string name="allow_lpoverclock_on">(Max: 620Mhz)</string>  
+    <string name="allow_lpoverclock_on">(Max: 620Mhz)</string>
+    <string name="auto_wifi">Turn WiFi off when screen is off</string>  
 </resources>

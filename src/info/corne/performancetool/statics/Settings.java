@@ -13,4 +13,7 @@ public interface Settings {
 	public static final String SELECTED_CPQGOV_SETTING = "info.corne.performancetool.selectedCPQGovernor";
 	public static final String CURRENT_WIDGET_PROFILE = "info.corne.performancetool.currentWidgetProfile";
 	public static final String LP_OC_ENABLED = "info.corne.performancetool.lpOverclockEnabled";
+	public static final String SCREEN_STATE = "info.corne.performancetool.screenState";
+	public static final String WIFI_ALREADY_ON = "info.corne.performancetool.wifiAlreadyOn";
+	public static final String AUTO_WIFI = "info.corne.performancetool.autoWifi";
 }
