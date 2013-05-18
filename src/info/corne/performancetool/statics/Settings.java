@@ -13,4 +13,5 @@ public interface Settings {
 	public static final String SELECTED_CPQGOV_SETTING = "info.corne.performancetool.selectedCPQGovernor";
 	public static final String CURRENT_WIDGET_PROFILE = "info.corne.performancetool.currentWidgetProfile";
 	public static final String LP_OC_ENABLED = "info.corne.performancetool.lpOverclockEnabled";
+	public static final String GPU_DECOUPLE_ENABLED = "info.corne.performancetool.gpuDecoupleEnabled";
 }

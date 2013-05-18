@@ -45,4 +45,8 @@
     <string name="allow_lpoverclock">Allow LP Overclocking</string>
     <string name="allow_lpoverclock_off">(Max: 475Mhz)</string>
     <string name="allow_lpoverclock_on">(Max: 620Mhz)</string>  
+    <string name="title_gpu_section">GPU</string>  
+    <string name="allow_decouble_gpu_off">GPU coupled with CPU</string>
+    <string name="allow_decouble_gpu_on">GPU decoupled from CPU</string>
+    <string name="allow_gpu_decouple">Decouple GPU from CPU</string>
 </resources>
