@@ -21,8 +21,6 @@ package info.corne.performancetool;
  * @author Corné Dorrestijn
  *
  */
-import info.corne.performancetool.utils.StringUtils;
-
 import java.io.File;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -49,8 +47,6 @@ import android.os.AsyncTask;
  * @author Corné Dorrestijn
  *
  */
- 
-import java.io.File;
 
 public class SetHardwareInfoTask extends AsyncTask<String[], Void, Void>
 {

@@ -21,11 +21,11 @@ import android.view.ViewGroup;
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
- * @author corne
+ * @author Corné Dorrestijn
  *
  */
-public class AdvancedSettingsActivity extends Fragment {
-	public AdvancedSettingsActivity()
+public class GPUSettingsActivity extends Fragment {
+	public GPUSettingsActivity()
 	{
 		
 	}
@@ -38,11 +38,12 @@ public class AdvancedSettingsActivity extends Fragment {
 	public void onActivityCreated(Bundle savedInstanceState)
 	{
 		super.onActivityCreated(savedInstanceState);
+		System.out.println("Rebuild");
 	}
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
-		View view = inflater.inflate(R.layout.advanced_settings, container, false);
+		View view = inflater.inflate(R.layout.gpu_settings, container, false);
 		return view;
-	}
+	} 
 }

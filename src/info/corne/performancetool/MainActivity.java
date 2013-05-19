@@ -3,6 +3,7 @@ package info.corne.performancetool;
 import info.corne.performancetool.activities.AdvancedSettingsActivity;
 import info.corne.performancetool.activities.CPUSettingsActivity;
 import info.corne.performancetool.activities.ProfilesActivity;
+import info.corne.performancetool.activities.GPUSettingsActivity;
 import info.corne.performancetool.statics.AudioSettings;
 import info.corne.performancetool.statics.DefaultSettings;
 import info.corne.performancetool.statics.FileNames;
@@ -10,19 +11,14 @@ import info.corne.performancetool.statics.PowerSettings;
 import info.corne.performancetool.statics.Settings;
 import info.corne.performancetool.utils.StringUtils;
 
-import java.util.HashMap;
 import java.util.Locale;
-
-import org.xml.sax.Parser;
 
 import android.app.ActionBar;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -46,7 +42,6 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.RemoteViews;
 import android.widget.SeekBar;
@@ -94,6 +89,7 @@ public class MainActivity extends FragmentActivity implements
 	SectionsPagerAdapter mSectionsPagerAdapter;
 	CPUSettingsActivity cpuSettingsActivity;
 	AdvancedSettingsActivity advancedSettingsActivity;
+	GPUSettingsActivity gpuSettingsActivity;
 	ProfilesActivity profilesActivity;
 	ProgressDialog dialog;
 	String[] hardwareInfo;
@@ -193,7 +189,8 @@ public class MainActivity extends FragmentActivity implements
 				FileNames.AUDIO_MIN_FREQ,
 				FileNames.CPUQUIET_AVAILABLE_GOVERNORS,
 				FileNames.CPUQUIET_GOVERNOR,
-				FileNames.ENABLE_LP_OC);
+				FileNames.ENABLE_LP_OC,
+				FileNames.GPU_DECOUPLE);
 	}
 
 	@Override
@@ -237,7 +234,8 @@ public class MainActivity extends FragmentActivity implements
 		SeekBar maxCpusSeek = (SeekBar) findViewById(R.id.maxCpusSeek);
 		Switch ocSwitch = (Switch) findViewById(R.id.overclockSwitch);
 		Switch lpOcSwitch = (Switch) findViewById(R.id.lpOverclockSwitch);
-		
+		Switch gpuDecoupleSwitch = (Switch) findViewById(R.id.gpuDecoupleSwitch);
+				
 		// The returned data will be stored in their variables.
 		String[] governors = result[0].split(" ");
 		String[] freqencies = result[1].split(" ");
@@ -349,6 +347,15 @@ public class MainActivity extends FragmentActivity implements
 		} else {
 			lpOcSwitch.setVisibility(View.GONE);
 			((TextView) findViewById(R.id.lpOverclockInfo)).setVisibility(View.GONE);
+		}
+
+		if(!result[13].equals("Error")){
+			if(result[13].compareTo("1") == 0) gpuDecoupleSwitch.setChecked(false);
+			else gpuDecoupleSwitch.setChecked(true);
+			onGpuDecoupleSwitchClick(gpuDecoupleSwitch);
+		} else {
+			gpuDecoupleSwitch.setVisibility(View.GONE);
+			((TextView) findViewById(R.id.gpuDecoupleInfo)).setVisibility(View.GONE);
 		}
 			
 		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -561,6 +568,41 @@ public class MainActivity extends FragmentActivity implements
 		ed.putBoolean(Settings.AUTO_WIFI, autoWifi);
 		ed.commit();
 	}
+
+	public void onGpuDecoupleSwitchClick(View view)
+	{
+		Switch gpuDecoupleSwitch = (Switch) view;
+		TextView gpuDecoupleInfo = (TextView) findViewById(R.id.gpuDecoupleInfo);
+		if(gpuDecoupleSwitch.isChecked())
+			gpuDecoupleInfo.setText(getResources().getString(R.string.allow_decouble_gpu_on));
+		else 
+			gpuDecoupleInfo.setText(getResources().getString(R.string.allow_decouble_gpu_off));
+	}
+
+	public void applyGpuSettings(View button)
+	{
+		// Open a dialog
+		dialog = ProgressDialog.show(this, getResources().getString(R.string.please_wait), getResources().getString(R.string.being_saved));
+
+		int gpuDecoupleEnabled = 0;
+		if(((Switch)findViewById(R.id.gpuDecoupleSwitch)).isChecked()) 
+			gpuDecoupleEnabled = 1;
+				
+		// And run the commands in a thread.
+		String[] files = {
+				FileNames.GPU_DECOUPLE
+		};
+		String[] values = {
+				(gpuDecoupleEnabled==1?"0":"1")
+		};
+		new SetHardwareInfoTask(files, values, dialog).execute();
+		// And store them in the shared preferences.
+		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
+		Editor ed = pm.edit();
+		ed.putInt(Settings.GPU_DECOUPLE_ENABLED, gpuDecoupleEnabled);
+		ed.commit();
+	}
+	
 	/**
 	 * This function will generate a ArrayAdapter
 	 * to use in a simple spinner.
@@ -665,6 +707,9 @@ public class MainActivity extends FragmentActivity implements
 			case 2:
 				advancedSettingsActivity = new AdvancedSettingsActivity();
 				return advancedSettingsActivity;
+			case 3:
+				gpuSettingsActivity = new GPUSettingsActivity();
+				return gpuSettingsActivity;
 			default:
 				Fragment fragment = new DummySectionFragment();
 				Bundle args = new Bundle();
@@ -677,8 +722,8 @@ public class MainActivity extends FragmentActivity implements
 
 		@Override
 		public int getCount() {
-			// Show 3 total pages.
-			return 3;
+			// Show 4 total pages.
+			return 4;
 		}
 
 		@Override
@@ -690,6 +735,8 @@ public class MainActivity extends FragmentActivity implements
 				return getString(R.string.title_cpu_section).toUpperCase(Locale.US);
 			case 2:
 				return getString(R.string.title_advanced_section).toUpperCase(Locale.US);
+			case 3:
+				return getString(R.string.title_gpu_section).toUpperCase(Locale.US);
 			}
 			return null;
 		}

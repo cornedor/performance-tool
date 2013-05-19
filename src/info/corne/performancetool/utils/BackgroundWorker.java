@@ -28,6 +28,7 @@ public class BackgroundWorker extends AsyncTask<Context, Void, Void>
 			String suspendFreq = sharedPreferences.getString(Settings.SUSPEND_FREQ, DefaultSettings.SUSPEND_FREQ);
 			String audioFreq = sharedPreferences.getString(Settings.AUDIO_MIN_FREQ, DefaultSettings.AUDIO_MIN_FREQ);
 			int lpOcEnabled = sharedPreferences.getInt(Settings.LP_OC_ENABLED, 0);
+			int gpuDecoupleEnabled = sharedPreferences.getInt(Settings.GPU_DECOUPLE_ENABLED, 0);
 			
 			String[] frequencyCommand = {"su", "-c", "echo " + selectedFrequencyCap + " > " + FileNames.CPU_USER_CAP};
 			String[] schedulerCommand = {"su", "-c", "echo " + selectedScheduler + " > " + FileNames.IO_SCHEDULERS };
@@ -38,7 +39,8 @@ public class BackgroundWorker extends AsyncTask<Context, Void, Void>
 			String[] suspendFreqCommand = {"su", "-c", "echo " + suspendFreq + " > " + FileNames.SUSPEND_FREQ};
 			String[] audioFreqCommand = {"su", "-c", "echo " + audioFreq + " > " + FileNames.AUDIO_MIN_FREQ};
 			String[] lpOcCommand = {"su", "-c", "echo " + lpOcEnabled + " > " + FileNames.ENABLE_LP_OC};
-							
+			String[] gpuDecoupleCommand = {"su", "-c", "echo " + (gpuDecoupleEnabled==1?0:1) + " > " + FileNames.GPU_DECOUPLE};	
+									
 			File f;
 			
 			ShellCommand.run(frequencyCommand);
@@ -64,6 +66,10 @@ public class BackgroundWorker extends AsyncTask<Context, Void, Void>
 			f=new File(FileNames.ENABLE_LP_OC);
 			if(f.exists())
 				ShellCommand.run(lpOcCommand);
+
+			f=new File(FileNames.GPU_DECOUPLE);
+			if(f.exists())
+				ShellCommand.run(gpuDecoupleCommand);
 		}
 		return null;
 	}

@@ -16,4 +16,5 @@ public interface Settings {
 	public static final String SCREEN_STATE = "info.corne.performancetool.screenState";
 	public static final String WIFI_ALREADY_ON = "info.corne.performancetool.wifiAlreadyOn";
 	public static final String AUTO_WIFI = "info.corne.performancetool.autoWifi";
+	public static final String GPU_DECOUPLE_ENABLED = "info.corne.performancetool.gpuDecoupleEnabled";
 }

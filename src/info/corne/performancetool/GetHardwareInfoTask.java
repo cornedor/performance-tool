@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-import android.app.ProgressDialog;
 import android.os.AsyncTask;
 /**
  * This class will read files etc. to get all

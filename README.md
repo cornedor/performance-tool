@@ -6,6 +6,11 @@ A tool to change performance related settings on some mobile devices.
 Changelog
 ---------
 
+19/05/13
+
+ * Added GPU tab.
+ * Keyboard will not show at startup.
+
 15/05/13:
 
  * Added functionality to automaticly turn off wifi when screen is truned off
