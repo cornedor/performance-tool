@@ -8,6 +8,10 @@ Changelog
 
 19/05/13
 
+ * UI Changes
+
+19/05/13
+
  * Added GPU tab.
  * Keyboard will not show at startup.
 

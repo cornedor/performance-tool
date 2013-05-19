@@ -16,7 +16,7 @@
     <string name="please_wait">Please wait&#8230;</string>
     <string name="being_saved">Settings are being saved.</string>
     <string name="gathering_info">Gathering some info.</string>
-    <string name="on_boot">On boot</string>
+    <string name="on_boot">Set on boot</string>
     <string name="title_profiles_section">Profiles</string>
     <string name="allow_overclock">Allow Overclocking</string>
     <string name="allow_overclock_off">(Max: 1x1.7GHz, 3x1.6GHz)</string>
@@ -47,7 +47,7 @@
     <string name="allow_lpoverclock_on">(Max: 620Mhz)</string>
     <string name="auto_wifi">Turn WiFi off when screen is off</string>
     <string name="title_gpu_section">GPU</string>  
-    <string name="allow_decouble_gpu_off">GPU coupled with CPU</string>
-    <string name="allow_decouble_gpu_on">GPU decoupled from CPU</string>
+    <string name="allow_decouble_gpu_off">GPU coupled with CPU - GPU will be scaled with CPU frequency</string>
+    <string name="allow_decouble_gpu_on">GPU decoupled from CPU - GPU will always run with maximum frequency</string>
     <string name="allow_gpu_decouple">Decouple GPU from CPU</string>
 </resources>

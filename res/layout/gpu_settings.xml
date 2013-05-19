@@ -12,21 +12,9 @@
 
     <Switch
         android:id="@+id/gpuDecoupleSwitch"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="onGpuDecoupleSwitchClick"
         android:text="@string/allow_gpu_decouple" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
-        <Button
-            android:id="@+id/gpuApplyButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="applyGpuSettings"
-            android:text="@string/apply" />
-
-    </LinearLayout>
 
 </LinearLayout>

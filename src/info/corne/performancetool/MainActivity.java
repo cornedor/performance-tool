@@ -11,15 +11,19 @@ import info.corne.performancetool.statics.PowerSettings;
 import info.corne.performancetool.statics.Settings;
 import info.corne.performancetool.utils.StringUtils;
 
+import java.util.HashMap;
 import java.util.Locale;
+
+import org.xml.sax.Parser;
 
 import android.app.ActionBar;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
-import android.content.Intent;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.AsyncTask;
@@ -42,6 +46,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.RemoteViews;
 import android.widget.SeekBar;
@@ -95,6 +100,9 @@ public class MainActivity extends FragmentActivity implements
 	String[] hardwareInfo;
 	String[] ioSchedulers;
 	ListAdapter profilesAdapter;
+	int currentTab = 0;
+	boolean onBootEnabled = false;
+	ActionBar actionBar;
 	
 	/**
 	 * The {@link ViewPager} that will host the section contents.
@@ -105,14 +113,10 @@ public class MainActivity extends FragmentActivity implements
 	protected void onCreate(Bundle savedInstanceState) {
 		
 		super.onCreate(savedInstanceState);
-		
-		Intent service2 = new Intent(getApplicationContext(), UpdateService.class);
-		getApplicationContext().startService(service2);
-		
 		setContentView(R.layout.activity_main);
 
 		// Set up the action bar.
-		final ActionBar actionBar = getActionBar();
+		actionBar = getActionBar();
 		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 
 		// Create the adapter that will return a fragment for each of the three
@@ -133,6 +137,7 @@ public class MainActivity extends FragmentActivity implements
 					@Override
 					public void onPageSelected(int position) {
 						actionBar.setSelectedNavigationItem(position);
+						currentTab = position;
 					}
 				});
 
@@ -164,11 +169,26 @@ public class MainActivity extends FragmentActivity implements
 			aboutDialog.setIcon(R.drawable.ic_launcher);
 			aboutDialog.show();
 			return true;
-		default:
-			return super.onOptionsItemSelected(menu);
+		case R.id.menu_onboot:
+			applySetOnBoot(menu);
+			return true;
+		case R.id.menu_apply:
+			switch (currentTab){
+				case 1:
+					applyCpuSettings(null);
+					break;
+				case 2:
+					applyAdvancedSettings(null);
+					break;
+				case 3:
+					applyGpuSettings(null);
+					break;
+			};
+			return true;
 		}
-		
+		return super.onOptionsItemSelected(menu);       
 	}
+	
 	/**
 	 * This function will show a progress dialog and wil start a thread
 	 * that will get all the required hardware info.
@@ -197,6 +217,12 @@ public class MainActivity extends FragmentActivity implements
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.activity_main, menu);
+		
+		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		onBootEnabled = pm.getBoolean(Settings.SET_ON_BOOT_SETTING, false);
+		MenuItem onBootMenu = menu.findItem(R.id.menu_onboot);
+		onBootMenu.setChecked(onBootEnabled);
+ 
 		return true;
 	}
 
@@ -244,7 +270,7 @@ public class MainActivity extends FragmentActivity implements
 		String[] suspendFreqsShort = new String[freqencies.length + 1];
 		String[] audioFreqsShort = new String[freqencies.length + 1];
 		Spinner cpqGovernorSpinner = (Spinner) findViewById(R.id.cpqGovernorSpinner);
-		String[] cpqGovernors = result[10].split(" ");		
+		String[] cpqGovernors = result[10].split(" ");
 	
 		frequenciesShort[0] = getResources().getString(R.string.disabled_string);
 		suspendFreqsShort[0] = getResources().getString(R.string.disabled_string);
@@ -302,7 +328,7 @@ public class MainActivity extends FragmentActivity implements
 		{
 			if(ioSchedulers[i].charAt(0) == '[')
 			{
-				currentIOScheduler = i;	
+				currentIOScheduler = i;
 				ioSchedulers[i] = ioSchedulers[i].substring(1, ioSchedulers[i].length()-1);
 			}
 		}
@@ -327,7 +353,7 @@ public class MainActivity extends FragmentActivity implements
 			((TextView) findViewById(R.id.maxCpusTextView)).setVisibility(View.GONE);
 		}
 
-		if(!result[11].equals("Error")){		
+		if(!result[11].equals("Error")){        
 			cpqGovernorSpinner.setAdapter(generateAdapter(cpqGovernors));
 			for(int i = 0; i < cpqGovernors.length; i++)
 			{
@@ -357,11 +383,10 @@ public class MainActivity extends FragmentActivity implements
 			gpuDecoupleSwitch.setVisibility(View.GONE);
 			((TextView) findViewById(R.id.gpuDecoupleInfo)).setVisibility(View.GONE);
 		}
-			
-		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		
-		((Switch) findViewById(R.id.setCpuSettingsOnBootSwitch)).setChecked(pm.getBoolean(Settings.SET_ON_BOOT_SETTING, false));
+		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		((CheckBox) findViewById(R.id.autoWifi)).setChecked(pm.getBoolean(Settings.AUTO_WIFI, false));
+		
 		dialog.dismiss();
 		
 		refreshProfilesList();
@@ -483,7 +508,7 @@ public class MainActivity extends FragmentActivity implements
 		else 
 			selectedFrequencyCap = selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000");
 		String selectedGovernor = (String)(((Spinner) findViewById(R.id.governorSpinner)).getSelectedItem());
-		Boolean onBootEnabled = (Boolean)(((Switch) findViewById(R.id.setCpuSettingsOnBootSwitch)).isChecked());
+
 		int ocEnabled = 0;
 		if(((Switch)findViewById(R.id.overclockSwitch)).isChecked()) 
 			ocEnabled = 1;
@@ -515,12 +540,22 @@ public class MainActivity extends FragmentActivity implements
 		Editor ed = pm.edit();
 		ed.putString(Settings.SELECTED_FREQ_SETTING, selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000"));
 		ed.putString(Settings.SELECTED_GOV_SETTING, selectedGovernor);
-		ed.putBoolean(Settings.SET_ON_BOOT_SETTING, onBootEnabled);
 		ed.putInt(Settings.OC_ENABLED, ocEnabled);
 		ed.putString(Settings.MAX_CPUS, maxCpus + "");
 		ed.putInt(Settings.LP_OC_ENABLED, lpOcEnabled);
 		ed.commit();
 	}
+	
+	private void applySetOnBoot(MenuItem item)
+	{
+		onBootEnabled = !onBootEnabled;
+		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
+		Editor ed = pm.edit();
+		ed.putBoolean(Settings.SET_ON_BOOT_SETTING, onBootEnabled);
+		ed.commit();
+		item.setChecked(onBootEnabled);
+	}
+	
 	/**
 	 * When the apply button is clicked in the advanced tab this
 	 * function will be triggered, this function will then
@@ -607,7 +642,7 @@ public class MainActivity extends FragmentActivity implements
 	 * This function will generate a ArrayAdapter
 	 * to use in a simple spinner.
 	 * @param args A array of strings that should be put in
-	 * 				the ArrayAdapter.
+	 *              the ArrayAdapter.
 	 * @return An ArrayAdapter including the args. 
 	 */
 	public ArrayAdapter<String> generateAdapter(String[] args)
@@ -631,7 +666,6 @@ public class MainActivity extends FragmentActivity implements
 		String selectedCPQGovernor = (String)(((Spinner) findViewById(R.id.cpqGovernorSpinner)).getSelectedItem());
 		boolean autoWifi = ((CheckBox) findViewById(R.id.autoWifi)).isChecked();
 		int lpOcEnabled = 0;
-		
 		if(((Switch)findViewById(R.id.lpOverclockSwitch)).isChecked()) lpOcEnabled = 1;
 				
 		EditText profileNameInput = (EditText) findViewById(R.id.profileNameInput);
@@ -828,7 +862,7 @@ public class MainActivity extends FragmentActivity implements
 				FileNames.SCALING_GOVERNOR,
 				FileNames.IO_SCHEDULERS,
 				FileNames.MAX_CPUS_MPDEC,
-				FileNames.MAX_CPUS_QUIET,				
+				FileNames.MAX_CPUS_QUIET,               
 				FileNames.SUSPEND_FREQ,
 				FileNames.AUDIO_MIN_FREQ,
 				FileNames.CPUQUIET_GOVERNOR,
@@ -862,7 +896,7 @@ public class MainActivity extends FragmentActivity implements
 				FileNames.SCALING_GOVERNOR,
 				FileNames.IO_SCHEDULERS,
 				FileNames.MAX_CPUS_MPDEC,
-				FileNames.MAX_CPUS_QUIET,				
+				FileNames.MAX_CPUS_QUIET,               
 				FileNames.SUSPEND_FREQ,
 				FileNames.AUDIO_MIN_FREQ,
 				FileNames.ENABLE_LP_OC
