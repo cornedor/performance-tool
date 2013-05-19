@@ -1,5 +1,13 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
-    <item android:id="@+id/menu_refresh" android:title="@string/menu_refresh"></item>
-    <item android:id="@+id/menu_about" android:title="@string/about"></item>
-
+    <item android:id="@+id/menu_apply" 
+    	android:title="@string/apply"
+    	android:icon="@drawable/apply"
+    	android:showAsAction="ifRoom"/>
+    <item android:id="@+id/menu_onboot" 
+	   	android:title="@string/on_boot"
+	   	android:checkable="true"/>
+    <item android:id="@+id/menu_refresh" 
+	   	android:title="@string/menu_refresh"/>
+    <item android:id="@+id/menu_about" 
+    	android:title="@string/about"/>
 </menu>
