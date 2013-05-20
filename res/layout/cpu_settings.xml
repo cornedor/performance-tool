@@ -15,6 +15,33 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
+    <RadioGroup
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <RadioButton android:id="@+id/cpu_hotplug_mode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/cpu_hotplug_mode"
+            android:onClick="onCpuHotplugModeClicked"/>
+        <RadioButton android:id="@+id/cpu_manual_mode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/cpu_manual_mode"
+            android:onClick="onCpuHotplugModeClicked"/>
+    </RadioGroup>
+    
+    <TextView
+        android:id="@+id/cpqGovernorTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/cpq_governor" />
+
+    <Spinner
+        android:id="@+id/cpqGovernorSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
     <TextView
         android:id="@+id/maxCpusTextView"
         android:layout_width="wrap_content"
@@ -35,25 +62,40 @@
 
     </LinearLayout>
 
-    <!-- LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
+    <TextView
+        android:id="@+id/activeCpusTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/active_cpus" />
 
-        <TextView
-            android:id="@+id/voltsTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/change_volts"
-            android:drawableRight="@drawable/ic_action_warning" />
-
-    </LinearLayout>
-
-    <SeekBar
-        android:id="@+id/voltsSeekBar"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:max="100"
-        android:progress="100" / -->
+        android:orientation="horizontal" >
+
+        <CheckBox
+            android:id="@+id/activeCpu1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onActiveCpuChangeClick"
+            android:layout_weight="0.3"
+            android:text="@string/active_cpu_1" />
+        <CheckBox
+            android:id="@+id/activeCpu2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onActiveCpuChangeClick"
+            android:layout_weight="0.3"
+            android:text="@string/active_cpu_2" />
+        <CheckBox
+            android:id="@+id/activeCpu3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onActiveCpuChangeClick"
+            android:layout_weight="0.3"
+            android:text="@string/active_cpu_3" />
+ 
+    </LinearLayout>
 
     <TextView
         android:id="@+id/governorTextView"

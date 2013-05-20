@@ -21,14 +21,15 @@ package info.corne.performancetool;
  * @author Corné Dorrestijn
  *
  */
-import info.corne.performancetool.utils.StringUtils;
-
 import java.io.File;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.Arrays;
 
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
+import android.util.Log;
+
 /**
  * Using this class commands to save the settings can be run.
  * 
@@ -107,6 +108,7 @@ public class SetHardwareInfoTask extends AsyncTask<String[], Void, Void>
 			
 			File f=new File(files[i]);
 			if(f.exists()){
+			    Log.d("maxwen", "command="+Arrays.asList(command).toString());
 				ShellCommand.run(command);
 			}
 		}

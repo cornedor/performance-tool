@@ -51,32 +51,14 @@ public class WidgetReceiver extends AppWidgetProvider
 			SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 			RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
 			current =  sharedPreferences.getInt(Settings.CURRENT_WIDGET_PROFILE, 0);
-			if(current == 0)
+			if(current == 2)
 			{
 				rv.setImageViewResource(R.id.widgetButton, R.drawable.widget_audio);
 				current = 1;
-				String[] files = {
-					FileNames.CPU_USER_CAP,
-					FileNames.ENABLE_OC,
-					FileNames.SCALING_GOVERNOR,
-					FileNames.IO_SCHEDULERS,
-					FileNames.MAX_CPUS_MPDEC,
-					FileNames.MAX_CPUS_QUIET,				
-					FileNames.SUSPEND_FREQ,
-					FileNames.AUDIO_MIN_FREQ,
-					FileNames.ENABLE_LP_OC
-				};
-				String[] values = {
-					AudioSettings.CPU_USER_CAP,
-					AudioSettings.ENABLE_OC,
-					AudioSettings.SCALING_GOVERNOR,
-					AudioSettings.IO_SCHEDULERS,
-					AudioSettings.MAX_CPUS,
-					AudioSettings.MAX_CPUS,
-					AudioSettings.SUSPEND_FREQ,
-					AudioSettings.AUDIO_MIN_FREQ,
-					AudioSettings.ENABLE_LP_OC
-				};
+                AudioSettings settings = new AudioSettings();
+                String[] files = settings.getFileNames();
+                String[] values = settings.getValues();
+
 				SetHardwareInfoTask task = new SetHardwareInfoTask(files, values);
 				task.execute();
 			}
@@ -84,57 +66,21 @@ public class WidgetReceiver extends AppWidgetProvider
 			{
 				rv.setImageViewResource(R.id.widgetButton, R.drawable.widget_power);
 				current = 2;
-				String[] files = {
-					FileNames.CPU_USER_CAP,
-					FileNames.ENABLE_OC,
-					FileNames.SCALING_GOVERNOR,
-					FileNames.IO_SCHEDULERS,
-					FileNames.MAX_CPUS_MPDEC,
-					FileNames.MAX_CPUS_QUIET,				
-					FileNames.SUSPEND_FREQ,
-					FileNames.AUDIO_MIN_FREQ,
-					FileNames.ENABLE_LP_OC
-				};
-				String[] values = {
-					PowerSettings.CPU_USER_CAP,
-					PowerSettings.ENABLE_OC,
-					PowerSettings.SCALING_GOVERNOR,
-					PowerSettings.IO_SCHEDULERS,
-					PowerSettings.MAX_CPUS,
-					PowerSettings.MAX_CPUS,
-					PowerSettings.SUSPEND_FREQ,
-					PowerSettings.AUDIO_MIN_FREQ,
-					PowerSettings.ENABLE_LP_OC,
-				};
+                PowerSettings settings = new PowerSettings();
+                String[] files = settings.getFileNames();
+                String[] values = settings.getValues();
+
 				SetHardwareInfoTask task = new SetHardwareInfoTask(files, values);
 				task.execute();
 			}
-			else if (current == 2)
+			else if (current == 0)
 			{
 				rv.setImageViewResource(R.id.widgetButton, R.drawable.widget_default);
 				current = 0;
-				String[] files = {
-					FileNames.CPU_USER_CAP,
-					FileNames.ENABLE_OC,
-					FileNames.SCALING_GOVERNOR,
-					FileNames.IO_SCHEDULERS,
-					FileNames.MAX_CPUS_MPDEC,
-					FileNames.MAX_CPUS_QUIET,
-					FileNames.SUSPEND_FREQ,
-					FileNames.AUDIO_MIN_FREQ,
-					FileNames.ENABLE_LP_OC
-				};
-				String[] values = {
-					DefaultSettings.CPU_USER_CAP,
-					DefaultSettings.ENABLE_OC,
-					DefaultSettings.SCALING_GOVERNOR,
-					DefaultSettings.IO_SCHEDULERS,
-					DefaultSettings.MAX_CPUS,
-					DefaultSettings.MAX_CPUS,
-					DefaultSettings.SUSPEND_FREQ,
-					DefaultSettings.AUDIO_MIN_FREQ,
-					DefaultSettings.ENABLE_LP_OC
-				};
+                DefaultSettings settings = new DefaultSettings();
+                String[] files = settings.getFileNames();
+                String[] values = settings.getValues();
+
 				SetHardwareInfoTask task = new SetHardwareInfoTask(files, values);
 				task.execute();
 			}

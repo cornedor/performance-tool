@@ -1,7 +1,6 @@
 package info.corne.performancetool.activities;
 
 import info.corne.performancetool.R;
-import info.corne.performancetool.R.layout;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;

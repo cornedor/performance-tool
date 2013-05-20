@@ -9,6 +9,7 @@ import info.corne.performancetool.statics.DefaultSettings;
 import info.corne.performancetool.statics.FileNames;
 import info.corne.performancetool.statics.PowerSettings;
 import info.corne.performancetool.statics.Settings;
+import info.corne.performancetool.statics.ProfileSettings;
 import info.corne.performancetool.utils.StringUtils;
 
 import java.util.HashMap;
@@ -24,6 +25,7 @@ import android.app.ProgressDialog;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent; 
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.AsyncTask;
@@ -56,6 +58,10 @@ import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.RadioButton;
+import android.widget.CheckBox;
+import android.util.Log;
+
 /**
  * The main class. This will load all the current settings and
  * add them to the interface. It also controls all interaction
@@ -102,6 +108,8 @@ public class MainActivity extends FragmentActivity implements
     int currentTab = 0;
     boolean onBootEnabled = false;
     ActionBar actionBar;
+    boolean cpuHotpluggingEnabled = true;
+    int[] activeCpus = new int[3];
     
     /**
      * The {@link ViewPager} that will host the section contents.
@@ -112,6 +120,10 @@ public class MainActivity extends FragmentActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         
         super.onCreate(savedInstanceState);
+
+        Intent service2 = new Intent(getApplicationContext(), UpdateService.class);
+        getApplicationContext().startService(service2); 
+
         setContentView(R.layout.activity_main);
 
         // Set up the action bar.
@@ -209,7 +221,9 @@ public class MainActivity extends FragmentActivity implements
                 FileNames.CPUQUIET_AVAILABLE_GOVERNORS,
                 FileNames.CPUQUIET_GOVERNOR,
                 FileNames.ENABLE_LP_OC,
-                FileNames.GPU_DECOUPLE);
+                FileNames.GPU_DECOUPLE,
+                FileNames.MANUAL_HOTPLUG,
+                FileNames.ACTIVE_CPUS);
     }
 
     @Override
@@ -336,8 +350,10 @@ public class MainActivity extends FragmentActivity implements
         ioSchedulerSpinner.setSelection(currentIOScheduler);
         
         // If overclock is one turn the switch on.
-        if(result[5].compareTo("1") == 0) ocSwitch.setChecked(true);
-        else ocSwitch.setChecked(false);
+        if(result[5].equals("1")) 
+            ocSwitch.setChecked(true);
+        else 
+            ocSwitch.setChecked(false);
         onOverclockSwitchClick(ocSwitch);
         
         if(!result[6].equals("Error") || !result[7].equals("Error")){
@@ -366,8 +382,10 @@ public class MainActivity extends FragmentActivity implements
 
         if(!result[12].equals("Error")){
             // If lp overclock is one turn the switch on.
-            if(result[12].compareTo("1") == 0) lpOcSwitch.setChecked(true);
-            else lpOcSwitch.setChecked(false);
+            if(result[12].equals("1")) 
+                lpOcSwitch.setChecked(true);
+            else 
+                lpOcSwitch.setChecked(false);
             onLpOverclockSwitchClick(lpOcSwitch);
         } else {
             lpOcSwitch.setVisibility(View.GONE);
@@ -375,15 +393,36 @@ public class MainActivity extends FragmentActivity implements
         }
 
         if(!result[13].equals("Error")){
-            if(result[13].compareTo("1") == 0) gpuDecoupleSwitch.setChecked(false);
-            else gpuDecoupleSwitch.setChecked(true);
+            if(result[13].equals("1")) 
+                gpuDecoupleSwitch.setChecked(false);
+            else 
+                gpuDecoupleSwitch.setChecked(true);
             onGpuDecoupleSwitchClick(gpuDecoupleSwitch);
         } else {
             gpuDecoupleSwitch.setVisibility(View.GONE);
             ((TextView) findViewById(R.id.gpuDecoupleInfo)).setVisibility(View.GONE);
         }
-            
-       dialog.dismiss();
+
+        if(!result[14].equals("Error")){
+            if(result[14].equals("0")) {
+                cpuHotpluggingEnabled = true;
+                updateCpuHotpluggingView(true);
+            } else {
+                cpuHotpluggingEnabled = false;
+                updateCpuHotpluggingView(true);
+            }
+        } else {
+            cpuHotpluggingEnabled = true;
+            updateCpuHotpluggingView(true);
+            ((RadioButton) findViewById(R.id.cpu_hotplug_mode)).setVisibility(View.GONE);            
+            ((RadioButton)findViewById(R.id.cpu_manual_mode)).setVisibility(View.GONE);                        
+        }
+
+        if(!result[15].equals("Error")){
+           updateActiveCpusView(result[15]);
+        }
+                    
+        dialog.dismiss();
         
         refreshProfilesList();
         ListView profilesList = (ListView) findViewById(R.id.profilesListView);
@@ -398,7 +437,7 @@ public class MainActivity extends FragmentActivity implements
         String selectedItem = (String) profilesAdapter.getItem(aInfo.position);
          
         menu.setHeaderTitle(selectedItem);
-        menu.add(1, 1, 1, getResources().getString(R.string.details));
+        //menu.add(1, 1, 1, getResources().getString(R.string.details));
         menu.add(1, 2, 2, getResources().getString(R.string.delete));
     }
     @Override
@@ -409,7 +448,7 @@ public class MainActivity extends FragmentActivity implements
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String selectedItem = (String) profilesAdapter.getItem(info.position);
         switch(itemId){
-        case 1:
+        /*case 1:
             StringBuilder message = new StringBuilder();
             message.append(getResources().getString(R.string.cpu_cap) + ": ");
             if(info.position == 1)
@@ -434,9 +473,9 @@ public class MainActivity extends FragmentActivity implements
                 message.append(sharedPreferences.getString(Settings.MAX_CPUS + selectedItem, "4"));
             }
             Toast.makeText(this, message.toString(), Toast.LENGTH_LONG).show();
-            break;
+            break;*/
         case 2:
-            if(info.position == 0 || info.position == 1)
+            if(info.position == 0 || info.position == 1 || info.position == 2)
             {
                 Toast.makeText(this, getResources().getString(R.string.default_no_remove), Toast.LENGTH_SHORT).show();
             }
@@ -445,6 +484,21 @@ public class MainActivity extends FragmentActivity implements
                 Editor editor = sharedPreferences.edit();
                 String profiles = sharedPreferences.getString(Settings.PROFILES, "").replace("|" + selectedItem, "");
                 editor.putString(Settings.PROFILES, profiles);
+                
+                editor.remove(Settings.SELECTED_FREQ_SETTING + selectedItem);
+                editor.remove(Settings.OC_ENABLED + selectedItem);
+                editor.remove(Settings.SELECTED_GOV_SETTING + selectedItem);
+                editor.remove(Settings.SELECTED_SCHEDULER_SETTING + selectedItem);
+                editor.remove(Settings.MAX_CPUS + selectedItem);
+                editor.remove(Settings.SUSPEND_FREQ + selectedItem);
+                editor.remove(Settings.AUDIO_MIN_FREQ + selectedItem);
+                editor.remove(Settings.SELECTED_CPQGOV_SETTING + selectedItem);
+                editor.remove(Settings.LP_OC_ENABLED + selectedItem);
+                editor.remove(Settings.CPU_HOTPLUGGING_ENABLED+ selectedItem);
+                editor.remove(Settings.ACTIVE_CPUS+ selectedItem);
+                editor.remove(Settings.SELECTED_CPQGOV_SETTING+ selectedItem);
+                editor.remove(Settings.GPU_DECOUPLE_ENABLED + selectedItem);
+
                 editor.commit();
                 refreshProfilesList();
             }
@@ -512,33 +566,66 @@ public class MainActivity extends FragmentActivity implements
         int lpOcEnabled = 0;
         if(((Switch)findViewById(R.id.lpOverclockSwitch)).isChecked()) 
             lpOcEnabled = 1;
-                
+
+        String selectedCPQGovernor = (String)(((Spinner) findViewById(R.id.cpqGovernorSpinner)).getSelectedItem());
+        String activeCpusString = getActiveCpusSettingString();
+                        
         // And run the commands in a thread.
-        String[] files = {
+        String[] files = null;
+        String[] values = null;
+        
+        if (cpuHotpluggingEnabled){
+            files = new String[]{
                 FileNames.CPU_USER_CAP,
                 FileNames.ENABLE_OC,
                 FileNames.SCALING_GOVERNOR,
+                FileNames.CPUQUIET_GOVERNOR,
+                FileNames.ENABLE_LP_OC,
+                FileNames.MANUAL_HOTPLUG,
                 FileNames.MAX_CPUS_MPDEC,
-                FileNames.MAX_CPUS_QUIET,
-                FileNames.ENABLE_LP_OC
-        };
-        String[] values = {
+                FileNames.MAX_CPUS_QUIET
+            };
+            values = new String[]{
                 selectedFrequencyCap,
                 "" + ocEnabled,
                 selectedGovernor,
+                selectedCPQGovernor,
+                "" + lpOcEnabled,
+                "" + 0,
                 maxCpus + "",
-                maxCpus + "",
-                "" + lpOcEnabled
-        };
+                maxCpus + ""
+            };
+        } else {
+            files = new String[]{
+                FileNames.CPU_USER_CAP,
+                FileNames.ENABLE_OC,
+                FileNames.SCALING_GOVERNOR,
+                FileNames.ENABLE_LP_OC,
+                FileNames.MANUAL_HOTPLUG,
+                FileNames.ACTIVE_CPUS
+            };
+            values = new String[]{
+                selectedFrequencyCap,
+                "" + ocEnabled,
+                selectedGovernor,
+                "" + lpOcEnabled,
+                "" + 1,
+                activeCpusString
+            };
+        }
+        
         new SetHardwareInfoTask(files, values, dialog).execute();
         // And store them in the shared preferences.
         SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
         Editor ed = pm.edit();
-        ed.putString(Settings.SELECTED_FREQ_SETTING, selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000"));
+        ed.putString(Settings.SELECTED_FREQ_SETTING, selectedFrequencyCap);
         ed.putString(Settings.SELECTED_GOV_SETTING, selectedGovernor);
-        ed.putInt(Settings.OC_ENABLED, ocEnabled);
-        ed.putString(Settings.MAX_CPUS, maxCpus + "");
-        ed.putInt(Settings.LP_OC_ENABLED, lpOcEnabled);
+        ed.putString(Settings.OC_ENABLED, ocEnabled==1?"1":"0");
+        ed.putString(Settings.MAX_CPUS, Integer.toString(maxCpus));
+        ed.putString(Settings.LP_OC_ENABLED, lpOcEnabled==1?"1":"0");
+        ed.putString(Settings.CPU_HOTPLUGGING_ENABLED, cpuHotpluggingEnabled?"0":"1");
+        ed.putString(Settings.ACTIVE_CPUS, activeCpusString);
+        ed.putString(Settings.SELECTED_CPQGOV_SETTING, selectedCPQGovernor);
         ed.commit();
     }
     
@@ -565,6 +652,7 @@ public class MainActivity extends FragmentActivity implements
         String selectedScheduler = (String)(((Spinner) findViewById(R.id.ioSchedulerSpinner)).getSelectedItem());
         String suspendFreq = (String)(((Spinner) findViewById(R.id.suspendCapSpinner)).getSelectedItem());
         String audioFreq = (String)(((Spinner) findViewById(R.id.audioCapSpinner)).getSelectedItem());
+        boolean autoWifi = ((CheckBox) findViewById(R.id.autoWifi)).isChecked(); 
         if(suspendFreq.compareTo(getResources().getString(R.string.disabled_string)) == 0)
             suspendFreq = "0";
         else
@@ -573,19 +661,16 @@ public class MainActivity extends FragmentActivity implements
             audioFreq = "0";
         else 
             audioFreq = audioFreq.replace(getResources().getString(R.string.mhz), "000");
-        String selectedCPQGovernor = (String)(((Spinner) findViewById(R.id.cpqGovernorSpinner)).getSelectedItem());
                 
         String[] values = {
                 selectedScheduler,
                 suspendFreq,
-                audioFreq,
-                selectedCPQGovernor
+                audioFreq
         };
         String[] files = {
                 FileNames.IO_SCHEDULERS,
                 FileNames.SUSPEND_FREQ,
-                FileNames.AUDIO_MIN_FREQ,
-                FileNames.CPUQUIET_GOVERNOR
+                FileNames.AUDIO_MIN_FREQ
         };
         new SetHardwareInfoTask(files, values, dialog).execute();
         
@@ -594,7 +679,7 @@ public class MainActivity extends FragmentActivity implements
         ed.putString(Settings.SELECTED_SCHEDULER_SETTING, selectedScheduler);
         ed.putString(Settings.SUSPEND_FREQ, suspendFreq);
         ed.putString(Settings.AUDIO_MIN_FREQ, audioFreq);
-        ed.putString(Settings.SELECTED_CPQGOV_SETTING, selectedCPQGovernor);
+        ed.putBoolean(Settings.AUTO_WIFI, autoWifi); 
         ed.commit();
     }
 
@@ -613,9 +698,7 @@ public class MainActivity extends FragmentActivity implements
         // Open a dialog
         dialog = ProgressDialog.show(this, getResources().getString(R.string.please_wait), getResources().getString(R.string.being_saved));
 
-        int gpuDecoupleEnabled = 0;
-        if(((Switch)findViewById(R.id.gpuDecoupleSwitch)).isChecked()) 
-            gpuDecoupleEnabled = 1;
+        int gpuDecoupleEnabled = ((Switch)findViewById(R.id.gpuDecoupleSwitch)).isChecked()?1:0;
                 
         // And run the commands in a thread.
         String[] files = {
@@ -628,7 +711,7 @@ public class MainActivity extends FragmentActivity implements
         // And store them in the shared preferences.
         SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
         Editor ed = pm.edit();
-        ed.putInt(Settings.GPU_DECOUPLE_ENABLED, gpuDecoupleEnabled);
+        ed.putString(Settings.GPU_DECOUPLE_ENABLED, gpuDecoupleEnabled==1?"0":"1");
         ed.commit();
     }
     
@@ -649,18 +732,33 @@ public class MainActivity extends FragmentActivity implements
     public void addProfile(View view)
     {
         String selectedFrequencyCap = (String)(((Spinner) findViewById(R.id.frequencyCapSpinner)).getSelectedItem());
+        if(selectedFrequencyCap.compareTo(getResources().getString(R.string.disabled_string)) == 0) 
+            selectedFrequencyCap = "0";
+        else 
+            selectedFrequencyCap = selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000");
+
         String selectedGovernor = (String)(((Spinner) findViewById(R.id.governorSpinner)).getSelectedItem());
         String selectedScheduler = (String)(((Spinner) findViewById(R.id.ioSchedulerSpinner)).getSelectedItem());
         int maxCpus = ((SeekBar) findViewById(R.id.maxCpusSeek)).getProgress() + 1;
-        int ocEnabled = 0;
-        if(((Switch)findViewById(R.id.overclockSwitch)).isChecked()) ocEnabled = 1;
-        //boolean fixAudioLag = ((Switch)findViewById(R.id.audioLagSwitch)).isChecked();
+        int ocEnabled = ((Switch)findViewById(R.id.overclockSwitch)).isChecked()?1:0;
         String suspendFreq = (String)(((Spinner) findViewById(R.id.suspendCapSpinner)).getSelectedItem());
-        String audioFreq = DefaultSettings.AUDIO_MIN_FREQ;
+        if(suspendFreq.compareTo(getResources().getString(R.string.disabled_string)) == 0)
+            suspendFreq = "0";
+        else
+            suspendFreq = suspendFreq.replace(getResources().getString(R.string.mhz), "000");
+            
+        String audioFreq = (String)(((Spinner) findViewById(R.id.audioCapSpinner)).getSelectedItem());
+        if(audioFreq.compareTo(getResources().getString(R.string.disabled_string)) == 0)
+            audioFreq = "0";
+        else 
+            audioFreq = audioFreq.replace(getResources().getString(R.string.mhz), "000");
+
+        int lpOcEnabled = ((Switch)findViewById(R.id.lpOverclockSwitch)).isChecked()?1:0;
         String selectedCPQGovernor = (String)(((Spinner) findViewById(R.id.cpqGovernorSpinner)).getSelectedItem());
-        int lpOcEnabled = 0;
-        if(((Switch)findViewById(R.id.lpOverclockSwitch)).isChecked()) lpOcEnabled = 1;
-                
+        String activeCpusString = getActiveCpusSettingString();
+        int gpuDecoupleEnabled = ((Switch)findViewById(R.id.gpuDecoupleSwitch)).isChecked()?1:0;
+        boolean autoWifi = ((CheckBox) findViewById(R.id.autoWifi)).isChecked(); 
+                        
         EditText profileNameInput = (EditText) findViewById(R.id.profileNameInput);
         String profileName = profileNameInput.getText().toString();
         if(!profileName.isEmpty())
@@ -680,16 +778,20 @@ public class MainActivity extends FragmentActivity implements
             
             Editor editor = sharedPreferences.edit();
             editor.putString(Settings.PROFILES, StringUtils.join(newProfiles, "|"));
-            editor.putString(Settings.SELECTED_FREQ_SETTING + profileName, 
-                    selectedFrequencyCap.replace(getResources().getString(R.string.mhz), "000"));
+            editor.putString(Settings.SELECTED_FREQ_SETTING + profileName, selectedFrequencyCap);
             editor.putString(Settings.OC_ENABLED + profileName, "" + ocEnabled);
             editor.putString(Settings.SELECTED_GOV_SETTING + profileName, selectedGovernor);
             editor.putString(Settings.SELECTED_SCHEDULER_SETTING + profileName, selectedScheduler);
             editor.putString(Settings.MAX_CPUS + profileName, maxCpus + "");
-            editor.putString(Settings.SUSPEND_FREQ + profileName, suspendFreq.replace(getResources().getString(R.string.mhz), "000"));
+            editor.putString(Settings.SUSPEND_FREQ + profileName, suspendFreq);
             editor.putString(Settings.AUDIO_MIN_FREQ + profileName, audioFreq);
             editor.putString(Settings.SELECTED_CPQGOV_SETTING + profileName, selectedCPQGovernor);
             editor.putString(Settings.LP_OC_ENABLED + profileName, "" + lpOcEnabled);
+            editor.putString(Settings.CPU_HOTPLUGGING_ENABLED+ profileName, cpuHotpluggingEnabled?"0":"1");
+            editor.putString(Settings.ACTIVE_CPUS+ profileName, activeCpusString);
+            editor.putString(Settings.SELECTED_CPQGOV_SETTING+ profileName, selectedCPQGovernor);
+            editor.putString(Settings.GPU_DECOUPLE_ENABLED + profileName, gpuDecoupleEnabled==1?"0":"1");
+            editor.putBoolean(Settings.AUTO_WIFI+ profileName, autoWifi);
             editor.commit();
             refreshProfilesList();
         }
@@ -815,144 +917,152 @@ public class MainActivity extends FragmentActivity implements
         RemoteViews rv = new RemoteViews(getApplicationContext().getPackageName(), R.layout.widget_layout);
         if(pos == 0)
         {
-            String[] files = {
-                FileNames.CPU_USER_CAP,
-                FileNames.ENABLE_OC,
-                FileNames.SCALING_GOVERNOR,
-                FileNames.IO_SCHEDULERS,
-                FileNames.MAX_CPUS_MPDEC,
-                FileNames.MAX_CPUS_QUIET,
-                FileNames.SUSPEND_FREQ,
-                FileNames.AUDIO_MIN_FREQ,
-                FileNames.CPUQUIET_GOVERNOR,
-                FileNames.ENABLE_LP_OC
-            };
-            String[] values = {
-                DefaultSettings.CPU_USER_CAP,
-                DefaultSettings.ENABLE_OC,
-                DefaultSettings.SCALING_GOVERNOR,
-                DefaultSettings.IO_SCHEDULERS,
-                DefaultSettings.MAX_CPUS,
-                DefaultSettings.MAX_CPUS,
-                DefaultSettings.SUSPEND_FREQ,
-                DefaultSettings.AUDIO_MIN_FREQ,
-                DefaultSettings.CPUQUIET_GOVERNOR,
-                DefaultSettings.ENABLE_LP_OC
-            };
+            DefaultSettings settings = new DefaultSettings();
+            String[] files = settings.getFileNames();
+            String[] values = settings.getValues();
+            
             SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
             task.addListener(this);
             task.execute();
             editor.putInt(Settings.CURRENT_WIDGET_PROFILE, 0);
+            editor.putBoolean(Settings.AUTO_WIFI, false); 
             rv.setImageViewResource(R.id.widgetButton, R.drawable.widget_default);
         }
         else if(pos == 1)
         {
-            String[] files = {
-                FileNames.CPU_USER_CAP,
-                FileNames.ENABLE_OC,
-                FileNames.SCALING_GOVERNOR,
-                FileNames.IO_SCHEDULERS,
-                FileNames.MAX_CPUS_MPDEC,
-                FileNames.MAX_CPUS_QUIET,               
-                FileNames.SUSPEND_FREQ,
-                FileNames.AUDIO_MIN_FREQ,
-                FileNames.CPUQUIET_GOVERNOR,
-                FileNames.ENABLE_LP_OC
-            };
-            String[] values = {
-                PowerSettings.CPU_USER_CAP,
-                PowerSettings.ENABLE_OC,
-                PowerSettings.SCALING_GOVERNOR,
-                PowerSettings.IO_SCHEDULERS,
-                PowerSettings.MAX_CPUS,
-                PowerSettings.MAX_CPUS,
-                PowerSettings.SUSPEND_FREQ,
-                PowerSettings.AUDIO_MIN_FREQ,
-                PowerSettings.CPUQUIET_GOVERNOR,
-                PowerSettings.ENABLE_LP_OC
-            };
+            PowerSettings settings = new PowerSettings();
+            String[] files = settings.getFileNames();
+            String[] values = settings.getValues();
+
+            SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
+            task.addListener(this);
+            task.execute();
+            editor.putInt(Settings.CURRENT_WIDGET_PROFILE, 1);
+            editor.putBoolean(Settings.AUTO_WIFI, false);  
+            rv.setImageViewResource(R.id.widgetButton, R.drawable.widget_power);
+        }
+        else if(pos == 2)
+        {
+            AudioSettings settings = new AudioSettings();
+            String[] files = settings.getFileNames();
+            String[] values = settings.getValues();
 
             SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
             task.addListener(this);
             task.execute();
             editor.putInt(Settings.CURRENT_WIDGET_PROFILE, 2);
-            rv.setImageViewResource(R.id.widgetButton, R.drawable.widget_power);
-        }
-        else if(pos == 2)
-        {
-            String[] files = {
-                FileNames.CPU_USER_CAP,
-                FileNames.ENABLE_OC,
-                FileNames.SCALING_GOVERNOR,
-                FileNames.IO_SCHEDULERS,
-                FileNames.MAX_CPUS_MPDEC,
-                FileNames.MAX_CPUS_QUIET,               
-                FileNames.SUSPEND_FREQ,
-                FileNames.AUDIO_MIN_FREQ,
-                FileNames.ENABLE_LP_OC
-            };
-            String[] values = {
-                AudioSettings.CPU_USER_CAP,
-                AudioSettings.ENABLE_OC,
-                AudioSettings.SCALING_GOVERNOR,
-                AudioSettings.IO_SCHEDULERS,
-                AudioSettings.MAX_CPUS,
-                AudioSettings.MAX_CPUS,
-                AudioSettings.SUSPEND_FREQ,
-                AudioSettings.AUDIO_MIN_FREQ,
-                AudioSettings.ENABLE_LP_OC
-            };
-            SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
-            task.addListener(this);
-            task.execute();
-            editor.putInt(Settings.CURRENT_WIDGET_PROFILE, 1);
+            editor.putBoolean(Settings.AUTO_WIFI, false); 
             rv.setImageViewResource(R.id.widgetButton, R.drawable.widget_audio);
         }
         else
         {
-            String selectedFrequencyCap = sharedPreferences.getString(Settings.SELECTED_FREQ_SETTING + selectedProfile, "0");
-            String ocEnabled = sharedPreferences.getString(Settings.OC_ENABLED + selectedProfile, "0");
-            String selectedGovernor = sharedPreferences.getString(Settings.SELECTED_GOV_SETTING + selectedProfile, "");
-            String selectedScheduler = sharedPreferences.getString(Settings.SELECTED_SCHEDULER_SETTING + selectedProfile, "");
-            String maxCpus = sharedPreferences.getString(Settings.MAX_CPUS, "4");
-            String suspendFreq = sharedPreferences.getString(Settings.SUSPEND_FREQ, DefaultSettings.SUSPEND_FREQ);
-            String audioFreq = sharedPreferences.getString(Settings.AUDIO_MIN_FREQ, DefaultSettings.AUDIO_MIN_FREQ);
-            String selectedCPQGovernor = sharedPreferences.getString(Settings.SELECTED_CPQGOV_SETTING + selectedProfile, "");
-            String lpOcEnabled = sharedPreferences.getString(Settings.LP_OC_ENABLED + selectedProfile, "0");
-            
-            String[] files = {
-                    FileNames.CPU_USER_CAP,
-                    FileNames.ENABLE_OC,
-                    FileNames.SCALING_GOVERNOR,
-                    FileNames.IO_SCHEDULERS,
-                    FileNames.MAX_CPUS_MPDEC,
-                    FileNames.MAX_CPUS_QUIET,
-                    FileNames.SUSPEND_FREQ,
-                    FileNames.AUDIO_MIN_FREQ,
-                    FileNames.CPUQUIET_GOVERNOR,
-                    FileNames.ENABLE_LP_OC
-            };
-    
-            String[] values = {
-                    selectedFrequencyCap,
-                    ocEnabled,
-                    selectedGovernor,
-                    selectedScheduler,
-                    maxCpus,
-                    maxCpus,
-                    suspendFreq,
-                    audioFreq,
-                    selectedCPQGovernor,
-                    lpOcEnabled
-            };
+            ProfileSettings settings = new ProfileSettings(selectedProfile, sharedPreferences);
+            String[] files = settings.getFileNames();
+            String[] values = settings.getValues();
+
             SetHardwareInfoTask task = new SetHardwareInfoTask(files, values, dialog, true);
             task.addListener(this);
             task.execute();
             editor.putInt(Settings.CURRENT_WIDGET_PROFILE, 0);
+            boolean autoWifi = sharedPreferences.getBoolean(Settings.AUTO_WIFI + selectedProfile, false); 
+            editor.putBoolean(Settings.AUTO_WIFI, autoWifi); 
             rv.setImageViewResource(R.id.widgetButton, R.drawable.widget_default);
         }
         editor.commit();
         ComponentName cn = new ComponentName(getApplicationContext(), WidgetReceiver.class);
         (AppWidgetManager.getInstance(getApplicationContext())).updateAppWidget(cn, rv);
+    }
+    
+    private void updateCpuHotpluggingView(boolean updateButton)
+    {
+        if (cpuHotpluggingEnabled){
+            ((SeekBar) findViewById(R.id.maxCpusSeek)).setVisibility(View.VISIBLE);
+            ((TextView) findViewById(R.id.maxCpusTextView)).setVisibility(View.VISIBLE);
+            ((Spinner) findViewById(R.id.cpqGovernorSpinner)).setVisibility(View.VISIBLE);
+        
+            ((CheckBox) findViewById(R.id.activeCpu1)).setVisibility(View.GONE);            
+            ((CheckBox) findViewById(R.id.activeCpu2)).setVisibility(View.GONE);                        
+            ((CheckBox) findViewById(R.id.activeCpu3)).setVisibility(View.GONE);            
+            ((TextView) findViewById(R.id.activeCpusTextView)).setVisibility(View.GONE);
+            
+            if (updateButton){
+                ((RadioButton) findViewById(R.id.cpu_hotplug_mode)).setChecked(true);
+            }
+        } else {
+            ((SeekBar) findViewById(R.id.maxCpusSeek)).setVisibility(View.GONE);
+            ((TextView) findViewById(R.id.maxCpusTextView)).setVisibility(View.GONE);
+            ((Spinner) findViewById(R.id.cpqGovernorSpinner)).setVisibility(View.GONE);
+            
+            ((CheckBox) findViewById(R.id.activeCpu1)).setVisibility(View.VISIBLE);            
+            ((CheckBox) findViewById(R.id.activeCpu2)).setVisibility(View.VISIBLE);                        
+            ((CheckBox) findViewById(R.id.activeCpu3)).setVisibility(View.VISIBLE);            
+            ((TextView) findViewById(R.id.activeCpusTextView)).setVisibility(View.VISIBLE);
+
+            if (updateButton){
+                ((RadioButton) findViewById(R.id.cpu_manual_mode)).setChecked(true);
+            }
+        }
+    }
+    
+    public void onCpuHotplugModeClicked(View view) {
+        // Is the button now checked?
+        boolean checked = ((RadioButton) view).isChecked();
+    
+        // Check which radio button was clicked
+        switch(view.getId()) {
+            case R.id.cpu_hotplug_mode:
+                if (checked){
+                    cpuHotpluggingEnabled = true;
+                    updateCpuHotpluggingView(false);
+                }
+                break;
+            case R.id.cpu_manual_mode:
+                if (checked){
+                    cpuHotpluggingEnabled = false;
+                    updateCpuHotpluggingView(false);                
+                }
+                break;
+        }
+    }
+    
+    private void updateActiveCpusView(String activeCpusString) {
+        if (activeCpusString.length()==0){
+            return;
+        }
+        
+        String[] parts = activeCpusString.split(" ");
+        if (parts.length != 3){
+            return;
+        }
+        
+        activeCpus[0]=Integer.parseInt(parts[0]);
+        activeCpus[1]=Integer.parseInt(parts[1]);
+        activeCpus[2]=Integer.parseInt(parts[2]);
+                
+        ((CheckBox) findViewById(R.id.activeCpu1)).setChecked(activeCpus[0]==1);            
+        ((CheckBox) findViewById(R.id.activeCpu2)).setChecked(activeCpus[1]==1);                        
+        ((CheckBox) findViewById(R.id.activeCpu3)).setChecked(activeCpus[2]==1);            
+    }
+    
+    private String getActiveCpusSettingString() {
+        return new Integer(activeCpus[0]).toString()+" "+
+            new Integer(activeCpus[1]).toString()+" "+
+            new Integer(activeCpus[2]).toString();
+    }
+    
+    public void onActiveCpuChangeClick(View view) {
+        boolean checked = ((CheckBox) view).isChecked();
+        
+        switch(view.getId()) {
+            case R.id.activeCpu1:
+                activeCpus[0]=checked?1:0;
+                break;
+            case R.id.activeCpu2:
+                activeCpus[1]=checked?1:0;
+                break;
+            case R.id.activeCpu3:
+                activeCpus[2]=checked?1:0;
+                break;
+        }
     }
 }
