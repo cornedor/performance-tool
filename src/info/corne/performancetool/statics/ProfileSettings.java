@@ -16,7 +16,8 @@ public class ProfileSettings extends DefaultSettings {
         ENABLE_LP_OC = sharedPreferences.getString(Settings.LP_OC_ENABLED + selectedProfile, "0");
         CPUQUIET_GOVERNOR = sharedPreferences.getString(Settings.SELECTED_CPQGOV_SETTING + selectedProfile, "rq_stats");
         CPU_HOTPLUGGING_ENABLED = sharedPreferences.getString(Settings.CPU_HOTPLUGGING_ENABLED + selectedProfile, "1");
-        GPU_DECOUPLE_ENABLED = sharedPreferences.getString(Settings.CPU_HOTPLUGGING_ENABLED + selectedProfile, "0");
+        GPU_DECOUPLE_ENABLED = sharedPreferences.getString(Settings.GPU_DECOUPLE_ENABLED + selectedProfile, "0");
         ACTIVE_CPUS = sharedPreferences.getString(Settings.ACTIVE_CPUS + selectedProfile, "0 0 0");
+	    AUTO_WIFI = sharedPreferences.getBoolean(Settings.AUTO_WIFI + selectedProfile, false);
     }
 }

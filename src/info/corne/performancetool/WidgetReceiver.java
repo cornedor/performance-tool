@@ -83,7 +83,9 @@ public class WidgetReceiver extends AppWidgetProvider
 
 				SetHardwareInfoTask task = new SetHardwareInfoTask(files, values);
 				task.execute();
+			} else {
 			}
+			
 			Editor editor = sharedPreferences.edit();
 			editor.putInt(Settings.CURRENT_WIDGET_PROFILE, current);
 			editor.commit();

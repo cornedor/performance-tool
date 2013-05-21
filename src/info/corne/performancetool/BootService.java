@@ -100,6 +100,12 @@ public class BootService extends Service{
 				ShellCommand.run(schedulerCommand);
 				ShellCommand.run(ocCommand);
 				ShellCommand.run(governorCommand);
+
+                // enable LP OC must be BEFORE suspend freq
+				f=new File(FileNames.ENABLE_LP_OC);
+				if(f.exists())
+					ShellCommand.run(lpOcCommand);
+
 				f=new File(FileNames.SUSPEND_FREQ);
 				if(f.exists())
 					ShellCommand.run(suspendFreqCommand);
@@ -129,10 +135,6 @@ public class BootService extends Service{
 				if(f.exists())
 					ShellCommand.run(activeCpusCommand);
                 
-				f=new File(FileNames.ENABLE_LP_OC);
-				if(f.exists())
-					ShellCommand.run(lpOcCommand);
-
 				f=new File(FileNames.GPU_DECOUPLE);
 				if(f.exists())
 					ShellCommand.run(gpuDecoupleCommand);

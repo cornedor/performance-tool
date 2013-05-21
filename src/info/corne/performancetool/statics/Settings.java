@@ -19,4 +19,21 @@ public interface Settings {
 	public static final String GPU_DECOUPLE_ENABLED = "info.corne.performancetool.gpuDecoupleEnabled";
 	public static final String CPU_HOTPLUGGING_ENABLED = "info.corne.performancetool.cpuHotplugging";
 	public static final String ACTIVE_CPUS = "info.corne.performancetool.activeCpus";
+
+    // all settings that are stored in a profile
+    public static final String[] ALL_PROFILE = new String[] {
+        SELECTED_FREQ_SETTING,
+        SELECTED_GOV_SETTING,
+        SELECTED_SCHEDULER_SETTING,
+        OC_ENABLED,
+        MAX_CPUS,
+        SUSPEND_FREQ,
+        AUDIO_MIN_FREQ,
+        SELECTED_CPQGOV_SETTING,
+        LP_OC_ENABLED,
+        AUTO_WIFI,
+        GPU_DECOUPLE_ENABLED,
+        CPU_HOTPLUGGING_ENABLED,
+        ACTIVE_CPUS
+    };
 }
