@@ -47,9 +47,7 @@
     <string name="allow_lpoverclock_on">(Max: 620Mhz)</string>  
     <string name="auto_wifi">Turn WiFi off when screen is off</string>
     <string name="title_gpu_section">GPU</string>  
-    <string name="allow_decouble_gpu_off">GPU coupled with CPU - GPU will be scaled with CPU frequency</string>
-    <string name="allow_decouble_gpu_on">GPU decoupled from CPU - GPU will always run with maximum frequency</string>
-    <string name="allow_gpu_decouple">Decouple GPU from CPU</string>
+    <string name="allow_gpu_scaling">GPU 3D scaling</string>
     <string name="cpu_hotplug_mode">CPUQuiet CPU hotplugging </string>
     <string name="cpu_manual_mode">Manual CPU control</string>
     <string name="active_cpus">Active CPUs</string>

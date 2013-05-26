@@ -12,20 +12,15 @@ import info.corne.performancetool.statics.Settings;
 import info.corne.performancetool.statics.ProfileSettings;
 import info.corne.performancetool.utils.StringUtils;
 
-import java.util.HashMap;
 import java.util.Locale;
-
-import org.xml.sax.Parser;
 
 import android.app.ActionBar;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent; 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.AsyncTask;
@@ -48,7 +43,6 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.RemoteViews;
 import android.widget.SeekBar;
 import android.widget.EditText;
@@ -121,7 +115,7 @@ public class MainActivity extends FragmentActivity implements
     int lpOcEnabled;
     String selectedCPQGovernor;
     String activeCpusString;
-    int gpuDecoupleEnabled;
+    int gpuScalingEnabled;
     boolean autoWifi;
     
     /**
@@ -234,7 +228,7 @@ public class MainActivity extends FragmentActivity implements
                 FileNames.CPUQUIET_AVAILABLE_GOVERNORS,
                 FileNames.CPUQUIET_GOVERNOR,
                 FileNames.ENABLE_LP_OC,
-                FileNames.GPU_DECOUPLE,
+                FileNames.GPU_SCALING,
                 FileNames.MANUAL_HOTPLUG,
                 FileNames.ACTIVE_CPUS);
     }
@@ -286,7 +280,7 @@ public class MainActivity extends FragmentActivity implements
         SeekBar maxCpusSeek = (SeekBar) findViewById(R.id.maxCpusSeek);
         Switch ocSwitch = (Switch) findViewById(R.id.overclockSwitch);
         Switch lpOcSwitch = (Switch) findViewById(R.id.lpOverclockSwitch);
-        Switch gpuDecoupleSwitch = (Switch) findViewById(R.id.gpuDecoupleSwitch);
+        Switch gpuScalingSwitch = (Switch) findViewById(R.id.gpuScalingSwitch);
                 
         // The returned data will be stored in their variables.
         String[] governors = result[0].split(" ");
@@ -407,13 +401,11 @@ public class MainActivity extends FragmentActivity implements
 
         if(!result[13].equals("Error")){
             if(result[13].equals("1")) 
-                gpuDecoupleSwitch.setChecked(false);
+                gpuScalingSwitch.setChecked(true);
             else 
-                gpuDecoupleSwitch.setChecked(true);
-            onGpuDecoupleSwitchClick(gpuDecoupleSwitch);
+                gpuScalingSwitch.setChecked(false);
         } else {
-            gpuDecoupleSwitch.setVisibility(View.GONE);
-            ((TextView) findViewById(R.id.gpuDecoupleInfo)).setVisibility(View.GONE);
+            gpuScalingSwitch.setVisibility(View.GONE);
         }
 
         if(!result[14].equals("Error")){
@@ -619,16 +611,6 @@ public class MainActivity extends FragmentActivity implements
         new SetHardwareInfoTask(files, values, dialog).execute();
     }
 
-    public void onGpuDecoupleSwitchClick(View view)
-    {
-        Switch gpuDecoupleSwitch = (Switch) view;
-        TextView gpuDecoupleInfo = (TextView) findViewById(R.id.gpuDecoupleInfo);
-        if(gpuDecoupleSwitch.isChecked())
-            gpuDecoupleInfo.setText(getResources().getString(R.string.allow_decouble_gpu_on));
-        else 
-            gpuDecoupleInfo.setText(getResources().getString(R.string.allow_decouble_gpu_off));
-    }
-
     public void applyGpuSettings(View button)
     {
         // Open a dialog
@@ -638,10 +620,10 @@ public class MainActivity extends FragmentActivity implements
                 
         // And run the commands in a thread.
         String[] files = {
-                FileNames.GPU_DECOUPLE
+                FileNames.GPU_SCALING
         };
         String[] values = {
-                (gpuDecoupleEnabled==1?"0":"1")
+                (gpuScalingEnabled ==1?"1":"0")
         };
         new SetHardwareInfoTask(files, values, dialog).execute();
     }
@@ -995,7 +977,7 @@ public class MainActivity extends FragmentActivity implements
         lpOcEnabled = ((Switch)findViewById(R.id.lpOverclockSwitch)).isChecked()?1:0;
         selectedCPQGovernor = (String)(((Spinner) findViewById(R.id.cpqGovernorSpinner)).getSelectedItem());
         activeCpusString = getActiveCpusSettingString();
-        gpuDecoupleEnabled = ((Switch)findViewById(R.id.gpuDecoupleSwitch)).isChecked()?1:0;
+        gpuScalingEnabled = ((Switch)findViewById(R.id.gpuScalingSwitch)).isChecked()?1:0;
         autoWifi = ((CheckBox) findViewById(R.id.autoWifi)).isChecked(); 
     }
         
@@ -1012,9 +994,9 @@ public class MainActivity extends FragmentActivity implements
         editor.putString(Settings.AUDIO_MIN_FREQ + selectedProfile, audioFreq);
         editor.putString(Settings.SELECTED_CPQGOV_SETTING + selectedProfile, selectedCPQGovernor);
         editor.putString(Settings.LP_OC_ENABLED + selectedProfile, "" + lpOcEnabled);
-        editor.putString(Settings.CPU_HOTPLUGGING_ENABLED + selectedProfile, cpuHotpluggingEnabled?"0":"1");
+        editor.putString(Settings.CPU_HOTPLUGGING + selectedProfile, cpuHotpluggingEnabled?"0":"1");
         editor.putString(Settings.ACTIVE_CPUS + selectedProfile, activeCpusString);
-        editor.putString(Settings.GPU_DECOUPLE_ENABLED + selectedProfile, gpuDecoupleEnabled==1?"0":"1");
+        editor.putString(Settings.GPU_SCALING + selectedProfile, gpuScalingEnabled ==1?"1":"0");
         editor.putBoolean(Settings.AUTO_WIFI + selectedProfile, autoWifi);
         editor.commit();
         

@@ -4,17 +4,10 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
-    <TextView
-        android:id="@+id/gpuDecoupleInfo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/allow_decouble_gpu_off" />
-
     <Switch
-        android:id="@+id/gpuDecoupleSwitch"
+        android:id="@+id/gpuScalingSwitch"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:onClick="onGpuDecoupleSwitchClick"
-        android:text="@string/allow_gpu_decouple" />
+        android:text="@string/allow_gpu_scaling" />
 
 </LinearLayout>

@@ -15,8 +15,8 @@ public class DefaultSettings {
 	protected String AUDIO_MIN_FREQ = "102000";
 	protected String CPUQUIET_GOVERNOR = "rq_stats";
 	protected String ENABLE_LP_OC = "0";
-	protected String CPU_HOTPLUGGING_ENABLED = "0";
-	protected String GPU_DECOUPLE_ENABLED = "1";
+	protected String CPU_HOTPLUGGING = "0";
+	protected String GPU_SCALING = "1";
 	protected String SELECTED_CPQGOV_SETTING = "rq_stats";
 	protected String ACTIVE_CPUS = "0 0 0";
 	protected boolean AUTO_WIFI = false;
@@ -35,7 +35,7 @@ public class DefaultSettings {
                 FileNames.SUSPEND_FREQ,
                 FileNames.AUDIO_MIN_FREQ,
                 FileNames.ENABLE_LP_OC,
-                FileNames.GPU_DECOUPLE,
+                FileNames.GPU_SCALING,
                 FileNames.CPUQUIET_GOVERNOR,
                 FileNames.MANUAL_HOTPLUG,
                 FileNames.ACTIVE_CPUS
@@ -53,9 +53,9 @@ public class DefaultSettings {
                 SUSPEND_FREQ,
                 AUDIO_MIN_FREQ,
                 ENABLE_LP_OC,
-                GPU_DECOUPLE_ENABLED,
+                GPU_SCALING,
                 CPUQUIET_GOVERNOR,
-                CPU_HOTPLUGGING_ENABLED,
+                CPU_HOTPLUGGING,
                 ACTIVE_CPUS
             };
     }
@@ -74,7 +74,7 @@ public class DefaultSettings {
     
     public void dump(StringBuilder message, Resources resources){
         message.append(resources.getString(R.string.cpu_cap) + ":" + getFreqValueString(CPU_USER_CAP, resources) + "\n");
-        if (CPU_HOTPLUGGING_ENABLED.equals("0")){
+        if (CPU_HOTPLUGGING.equals("0")){
             message.append(resources.getString(R.string.cpu_hotplug_mode) + "\n");
             message.append(resources.getString(R.string.cpq_governor) + ":" + CPUQUIET_GOVERNOR + "\n");
             message.append(resources.getString(R.string.max_cpus) + ":" + MAX_CPUS + "\n");
@@ -89,6 +89,6 @@ public class DefaultSettings {
         message.append(resources.getString(R.string.suspend_cap) + ":" + getFreqValueString(SUSPEND_FREQ, resources) + "\n");
         message.append(resources.getString(R.string.audio_cap) + ":" + getFreqValueString(AUDIO_MIN_FREQ, resources) + "\n");
         message.append(resources.getString(R.string.auto_wifi) + ":" + Boolean.toString(AUTO_WIFI) + "\n");
-        message.append(resources.getString(R.string.allow_gpu_decouple) + ":" + getIntValueString((GPU_DECOUPLE_ENABLED.equals("1")?"0":"1")) + "\n");
+        message.append(resources.getString(R.string.allow_gpu_scaling) + ":" + getIntValueString(GPU_SCALING) + "\n");
     }
 }

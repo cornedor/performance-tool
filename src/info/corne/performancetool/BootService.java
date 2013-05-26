@@ -1,6 +1,5 @@
 package info.corne.performancetool;
 
-import info.corne.performancetool.statics.DefaultSettings;
 import info.corne.performancetool.statics.FileNames;
 import info.corne.performancetool.statics.Settings;
 import android.app.Service;
@@ -76,8 +75,8 @@ public class BootService extends Service{
 				String audioFreq = sharedPreferences.getString(Settings.AUDIO_MIN_FREQ, "102000");
 				String selectedCPQGovernor = sharedPreferences.getString(Settings.SELECTED_CPQGOV_SETTING, "rq_stats");				
 				String lpOc = sharedPreferences.getString(Settings.LP_OC_ENABLED, "0");
-				String gpuDecouple = sharedPreferences.getString(Settings.GPU_DECOUPLE_ENABLED, "1");
-				String manualHotplug = sharedPreferences.getString(Settings.CPU_HOTPLUGGING_ENABLED, "0");
+				String gpuScaling = sharedPreferences.getString(Settings.GPU_SCALING, "1");
+				String manualHotplug = sharedPreferences.getString(Settings.CPU_HOTPLUGGING, "0");
 				String activeCpus = parseActiveCpusView(sharedPreferences.getString(Settings.ACTIVE_CPUS, ""));
 				
 				String[] frequencyCommand = {"su", "-c", "echo " + selectedFrequencyCap + " > " + FileNames.CPU_USER_CAP};
@@ -90,7 +89,7 @@ public class BootService extends Service{
 				String[] audioFreqCommand = {"su", "-c", "echo " + audioFreq + " > " + FileNames.AUDIO_MIN_FREQ};
 				String[] cpqSchedulerCommand = {"su", "-c", "echo " + selectedCPQGovernor + " > " + FileNames.CPUQUIET_GOVERNOR };				
 				String[] lpOcCommand = {"su", "-c", "echo " + lpOc + " > " + FileNames.ENABLE_LP_OC};
-				String[] gpuDecoupleCommand = {"su", "-c", "echo " + gpuDecouple + " > " + FileNames.GPU_DECOUPLE};
+				String[] gpuScalingCommand = {"su", "-c", "echo " + gpuScaling + " > " + FileNames.GPU_SCALING};
 				String[] enableManualHotplugCommand = {"su", "-c", "echo " + manualHotplug + " > " + FileNames.MANUAL_HOTPLUG};
 				String[] activeCpusCommand = {"su", "-c", "echo " + activeCpus + " > " + FileNames.ACTIVE_CPUS};
 						
@@ -135,9 +134,9 @@ public class BootService extends Service{
 				if(f.exists())
 					ShellCommand.run(activeCpusCommand);
                 
-				f=new File(FileNames.GPU_DECOUPLE);
+				f=new File(FileNames.GPU_SCALING);
 				if(f.exists())
-					ShellCommand.run(gpuDecoupleCommand);
+					ShellCommand.run(gpuScalingCommand);
 
 			}
 			return null;
