@@ -54,4 +54,5 @@
     <string name="active_cpu_1">CPU1</string>
     <string name="active_cpu_2">CPU2</string>
     <string name="active_cpu_3">CPU3</string>
+    <string name="gpu_quick_oc">GPU OC</string>
 </resources>

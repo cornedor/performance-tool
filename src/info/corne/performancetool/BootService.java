@@ -76,9 +76,10 @@ public class BootService extends Service{
 				String selectedCPQGovernor = sharedPreferences.getString(Settings.SELECTED_CPQGOV_SETTING, "rq_stats");				
 				String lpOc = sharedPreferences.getString(Settings.LP_OC_ENABLED, "0");
 				String gpuScaling = sharedPreferences.getString(Settings.GPU_SCALING, "1");
-				String manualHotplug = sharedPreferences.getString(Settings.CPU_HOTPLUGGING, "0");
+				String cpuHotplugging = sharedPreferences.getString(Settings.CPU_HOTPLUGGING, "0");
 				String activeCpus = parseActiveCpusView(sharedPreferences.getString(Settings.ACTIVE_CPUS, ""));
-				
+                String gpuQuickOC = sharedPreferences.getString(Settings.GPU_QUICK_OC, "0");
+
 				String[] frequencyCommand = {"su", "-c", "echo " + selectedFrequencyCap + " > " + FileNames.CPU_USER_CAP};
 				String[] schedulerCommand = {"su", "-c", "echo " + selectedScheduler + " > " + FileNames.IO_SCHEDULERS };
 				String[] governorCommand = {"su", "-c", "echo " + selectedGovernor + " > " + FileNames.SCALING_GOVERNOR};
@@ -90,10 +91,11 @@ public class BootService extends Service{
 				String[] cpqSchedulerCommand = {"su", "-c", "echo " + selectedCPQGovernor + " > " + FileNames.CPUQUIET_GOVERNOR };				
 				String[] lpOcCommand = {"su", "-c", "echo " + lpOc + " > " + FileNames.ENABLE_LP_OC};
 				String[] gpuScalingCommand = {"su", "-c", "echo " + gpuScaling + " > " + FileNames.GPU_SCALING};
-				String[] enableManualHotplugCommand = {"su", "-c", "echo " + manualHotplug + " > " + FileNames.MANUAL_HOTPLUG};
+				String[] cpuHotpluggingCommand = {"su", "-c", "echo " + cpuHotplugging + " > " + FileNames.MANUAL_HOTPLUG};
 				String[] activeCpusCommand = {"su", "-c", "echo " + activeCpus + " > " + FileNames.ACTIVE_CPUS};
-						
-				File f;
+                String[] gpuQuickOCCommand = {"su", "-c", "echo " + gpuQuickOC + " > " + FileNames.GPU_QUICK_OC};
+
+                File f;
 				
 				ShellCommand.run(frequencyCommand);
 				ShellCommand.run(schedulerCommand);
@@ -128,7 +130,7 @@ public class BootService extends Service{
 
 				f=new File(FileNames.MANUAL_HOTPLUG);
 				if(f.exists())
-				    ShellCommand.run(enableManualHotplugCommand);
+				    ShellCommand.run(cpuHotpluggingCommand);
 				
 				f=new File(FileNames.ACTIVE_CPUS);
 				if(f.exists())
@@ -138,7 +140,11 @@ public class BootService extends Service{
 				if(f.exists())
 					ShellCommand.run(gpuScalingCommand);
 
-			}
+                f=new File(FileNames.GPU_QUICK_OC);
+                if(f.exists())
+                    ShellCommand.run(gpuQuickOCCommand);
+
+            }
 			return null;
 		}
 		

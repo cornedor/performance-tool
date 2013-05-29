@@ -20,6 +20,7 @@ public class DefaultSettings {
 	protected String SELECTED_CPQGOV_SETTING = "rq_stats";
 	protected String ACTIVE_CPUS = "0 0 0";
 	protected boolean AUTO_WIFI = false;
+    protected String GPU_QUICK_OC = "0";
 
     public DefaultSettings() {
     }
@@ -38,7 +39,8 @@ public class DefaultSettings {
                 FileNames.GPU_SCALING,
                 FileNames.CPUQUIET_GOVERNOR,
                 FileNames.MANUAL_HOTPLUG,
-                FileNames.ACTIVE_CPUS
+                FileNames.ACTIVE_CPUS,
+                FileNames.GPU_QUICK_OC
             };
     }
     
@@ -56,7 +58,8 @@ public class DefaultSettings {
                 GPU_SCALING,
                 CPUQUIET_GOVERNOR,
                 CPU_HOTPLUGGING,
-                ACTIVE_CPUS
+                ACTIVE_CPUS,
+                GPU_QUICK_OC
             };
     }
     
@@ -90,5 +93,6 @@ public class DefaultSettings {
         message.append(resources.getString(R.string.audio_cap) + ":" + getFreqValueString(AUDIO_MIN_FREQ, resources) + "\n");
         message.append(resources.getString(R.string.auto_wifi) + ":" + Boolean.toString(AUTO_WIFI) + "\n");
         message.append(resources.getString(R.string.allow_gpu_scaling) + ":" + getIntValueString(GPU_SCALING) + "\n");
+        message.append(resources.getString(R.string.gpu_quick_oc) + ":" + getIntValueString(GPU_QUICK_OC) + "\n");
     }
 }

@@ -19,5 +19,6 @@ public class ProfileSettings extends DefaultSettings {
         GPU_SCALING = sharedPreferences.getString(Settings.GPU_SCALING + selectedProfile, "1");
         ACTIVE_CPUS = sharedPreferences.getString(Settings.ACTIVE_CPUS + selectedProfile, "0 0 0");
 	    AUTO_WIFI = sharedPreferences.getBoolean(Settings.AUTO_WIFI + selectedProfile, false);
+        GPU_QUICK_OC = sharedPreferences.getString(Settings.GPU_QUICK_OC + selectedProfile, "0");
     }
 }

@@ -102,7 +102,7 @@ public class MainActivity extends FragmentActivity implements
     int currentTab = 0;
     boolean onBootEnabled = false;
     ActionBar actionBar;
-    boolean cpuHotpluggingEnabled = true;
+    boolean cpuHotplugging = true;
     int[] activeCpus = new int[3];
     
     String selectedFrequencyCap;
@@ -117,6 +117,7 @@ public class MainActivity extends FragmentActivity implements
     String activeCpusString;
     int gpuScalingEnabled;
     boolean autoWifi;
+    int gpuQuickOCEnabled;
     
     /**
      * The {@link ViewPager} that will host the section contents.
@@ -230,7 +231,8 @@ public class MainActivity extends FragmentActivity implements
                 FileNames.ENABLE_LP_OC,
                 FileNames.GPU_SCALING,
                 FileNames.MANUAL_HOTPLUG,
-                FileNames.ACTIVE_CPUS);
+                FileNames.ACTIVE_CPUS,
+                FileNames.GPU_QUICK_OC);
     }
 
     @Override
@@ -281,7 +283,8 @@ public class MainActivity extends FragmentActivity implements
         Switch ocSwitch = (Switch) findViewById(R.id.overclockSwitch);
         Switch lpOcSwitch = (Switch) findViewById(R.id.lpOverclockSwitch);
         Switch gpuScalingSwitch = (Switch) findViewById(R.id.gpuScalingSwitch);
-                
+        Switch gpuQuickOCSwitch = (Switch) findViewById(R.id.gpuOCSwitch);
+
         // The returned data will be stored in their variables.
         String[] governors = result[0].split(" ");
         String[] freqencies = result[1].split(" ");
@@ -410,14 +413,14 @@ public class MainActivity extends FragmentActivity implements
 
         if(!result[14].equals("Error")){
             if(result[14].equals("0")) {
-                cpuHotpluggingEnabled = true;
+                cpuHotplugging = true;
                 updateCpuHotpluggingView(true);
             } else {
-                cpuHotpluggingEnabled = false;
+                cpuHotplugging = false;
                 updateCpuHotpluggingView(true);
             }
         } else {
-            cpuHotpluggingEnabled = true;
+            cpuHotplugging = true;
             updateCpuHotpluggingView(true);
             ((RadioButton) findViewById(R.id.cpu_hotplug_mode)).setVisibility(View.GONE);            
             ((RadioButton)findViewById(R.id.cpu_manual_mode)).setVisibility(View.GONE);                        
@@ -426,7 +429,16 @@ public class MainActivity extends FragmentActivity implements
         if(!result[15].equals("Error")){
            updateActiveCpusView(result[15]);
         }
-                    
+
+        if(!result[16].equals("Error")){
+            if(result[16].equals("1"))
+                gpuQuickOCSwitch.setChecked(true);
+            else
+                gpuQuickOCSwitch.setChecked(false);
+        } else {
+            gpuQuickOCSwitch.setVisibility(View.GONE);
+        }
+
         dialog.dismiss();
         
         updateFromView();
@@ -532,7 +544,7 @@ public class MainActivity extends FragmentActivity implements
         String[] files = null;
         String[] values = null;
         
-        if (cpuHotpluggingEnabled){
+        if (cpuHotplugging){
             files = new String[]{
                 FileNames.CPU_USER_CAP,
                 FileNames.ENABLE_OC,
@@ -620,10 +632,12 @@ public class MainActivity extends FragmentActivity implements
                 
         // And run the commands in a thread.
         String[] files = {
-                FileNames.GPU_SCALING
+                FileNames.GPU_SCALING,
+                FileNames.GPU_QUICK_OC
         };
         String[] values = {
-                (gpuScalingEnabled ==1?"1":"0")
+                (gpuScalingEnabled ==1?"1":"0"),
+                (gpuQuickOCEnabled ==1?"1":"0")
         };
         new SetHardwareInfoTask(files, values, dialog).execute();
     }
@@ -844,7 +858,7 @@ public class MainActivity extends FragmentActivity implements
     
     private void updateCpuHotpluggingView(boolean updateButton)
     {
-        if (cpuHotpluggingEnabled){
+        if (cpuHotplugging){
             ((SeekBar) findViewById(R.id.maxCpusSeek)).setVisibility(View.VISIBLE);
             ((TextView) findViewById(R.id.maxCpusTextView)).setVisibility(View.VISIBLE);
             ((Spinner) findViewById(R.id.cpqGovernorSpinner)).setVisibility(View.VISIBLE);
@@ -881,13 +895,13 @@ public class MainActivity extends FragmentActivity implements
         switch(view.getId()) {
             case R.id.cpu_hotplug_mode:
                 if (checked){
-                    cpuHotpluggingEnabled = true;
+                    cpuHotplugging = true;
                     updateCpuHotpluggingView(false);
                 }
                 break;
             case R.id.cpu_manual_mode:
                 if (checked){
-                    cpuHotpluggingEnabled = false;
+                    cpuHotplugging = false;
                     updateCpuHotpluggingView(false);                
                 }
                 break;
@@ -978,7 +992,8 @@ public class MainActivity extends FragmentActivity implements
         selectedCPQGovernor = (String)(((Spinner) findViewById(R.id.cpqGovernorSpinner)).getSelectedItem());
         activeCpusString = getActiveCpusSettingString();
         gpuScalingEnabled = ((Switch)findViewById(R.id.gpuScalingSwitch)).isChecked()?1:0;
-        autoWifi = ((CheckBox) findViewById(R.id.autoWifi)).isChecked(); 
+        autoWifi = ((CheckBox) findViewById(R.id.autoWifi)).isChecked();
+        gpuQuickOCEnabled = ((Switch)findViewById(R.id.gpuOCSwitch)).isChecked()?1:0;
     }
         
     /* saves all actual values in preferences */
@@ -994,12 +1009,13 @@ public class MainActivity extends FragmentActivity implements
         editor.putString(Settings.AUDIO_MIN_FREQ + selectedProfile, audioFreq);
         editor.putString(Settings.SELECTED_CPQGOV_SETTING + selectedProfile, selectedCPQGovernor);
         editor.putString(Settings.LP_OC_ENABLED + selectedProfile, "" + lpOcEnabled);
-        editor.putString(Settings.CPU_HOTPLUGGING + selectedProfile, cpuHotpluggingEnabled?"0":"1");
+        editor.putString(Settings.CPU_HOTPLUGGING + selectedProfile, cpuHotplugging ?"0":"1");
         editor.putString(Settings.ACTIVE_CPUS + selectedProfile, activeCpusString);
         editor.putString(Settings.GPU_SCALING + selectedProfile, gpuScalingEnabled ==1?"1":"0");
         editor.putBoolean(Settings.AUTO_WIFI + selectedProfile, autoWifi);
+        editor.putString(Settings.GPU_QUICK_OC + selectedProfile, gpuQuickOCEnabled ==1?"1":"0");
         editor.commit();
         
-        Log.d("maxwen", "prefs="+sharedPreferences.getAll());
+        //Log.d("maxwen", "prefs="+sharedPreferences.getAll());
     }
 }
