@@ -30,11 +30,17 @@ public class GetHardwareInfoTask extends AsyncTask<String, Void, Void>{
 
 	private MainActivity main;
 	private String[] result;
+    private HardwareInfoPostRunnable postHook;
 	public GetHardwareInfoTask(MainActivity main)
 	{
 		this.main = main;
 	}
-	
+
+    public GetHardwareInfoTask(HardwareInfoPostRunnable hook)
+    {
+        this.postHook = hook;
+    }
+
 	@Override
 	protected Void doInBackground(String... params) {
 		result = new String[params.length];
@@ -76,7 +82,12 @@ public class GetHardwareInfoTask extends AsyncTask<String, Void, Void>{
 	@Override
 	protected void onPostExecute(Void res)
 	{
-		main.hardwareInfoLoaded(result);
+        if (postHook!=null){
+            postHook.setResult(result);
+            postHook.run();
+        } else {
+		    main.hardwareInfoLoaded(result);
+        }
 	}
 
 	

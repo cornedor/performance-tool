@@ -117,7 +117,8 @@ public class MainActivity extends FragmentActivity implements
     int gpuScalingEnabled;
     boolean autoWifi;
     int gpuQuickOCEnabled;
-    
+    String gpuOCValuesString;
+
     /**
      * The {@link ViewPager} that will host the section contents.
      */
@@ -231,7 +232,15 @@ public class MainActivity extends FragmentActivity implements
                 FileNames.GPU_SCALING,
                 FileNames.MANUAL_HOTPLUG,
                 FileNames.ACTIVE_CPUS,
-                FileNames.GPU_QUICK_OC);
+                FileNames.GPU_QUICK_OC,
+                FileNames.GPU_OC);
+    }
+
+    public void getHardwareInfo(HardwareInfoPostRunnable postHook, String... params)
+    {
+        dialog = ProgressDialog.show(this, getResources().getString(R.string.please_wait), getResources().getString(R.string.gathering_info));
+        new GetHardwareInfoTask(postHook).execute(
+                params);
     }
 
     @Override
@@ -283,6 +292,7 @@ public class MainActivity extends FragmentActivity implements
         Switch lpOcSwitch = (Switch) findViewById(R.id.lpOverclockSwitch);
         Switch gpuScalingSwitch = (Switch) findViewById(R.id.gpuScalingSwitch);
         Switch gpuQuickOCSwitch = (Switch) findViewById(R.id.gpuOCSwitch);
+        TextView gpuOCValues = (TextView) findViewById(R.id.gpuOCValues);
 
         // The returned data will be stored in their variables.
         String[] governors = result[0].split(" ");
@@ -436,6 +446,13 @@ public class MainActivity extends FragmentActivity implements
                 gpuQuickOCSwitch.setChecked(false);
         } else {
             gpuQuickOCSwitch.setVisibility(View.GONE);
+        }
+
+        if(!result[17].equals("Error")){
+            gpuOCValuesString = result[17];
+            gpuOCValues.setText(gpuOCValuesString);
+        } else {
+            gpuOCValues.setVisibility(View.GONE);
         }
 
         dialog.dismiss();
@@ -638,7 +655,24 @@ public class MainActivity extends FragmentActivity implements
                 (gpuScalingEnabled ==1?"1":"0"),
                 (gpuQuickOCEnabled ==1?"1":"0")
         };
+
         new SetHardwareInfoTask(files, values, dialog).execute();
+
+        final TextView gpuOCValues = (TextView) findViewById(R.id.gpuOCValues);
+
+        getHardwareInfo(new HardwareInfoPostRunnable() {
+            @Override
+            public void run() {
+                if(!result[0].equals("Error")){
+                    gpuOCValuesString = result[0];
+                    gpuOCValues.setText(gpuOCValuesString);
+                } else {
+                    gpuOCValues.setVisibility(View.GONE);
+                }
+            }
+        }, FileNames.GPU_OC);
+
+        dialog.dismiss();
     }
     
     /**
