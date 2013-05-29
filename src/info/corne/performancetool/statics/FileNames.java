@@ -14,6 +14,9 @@ public interface FileNames {
 	public static final String CPUQUIET_AVAILABLE_GOVERNORS = "/sys/devices/system/cpu/cpuquiet/available_governors";
 	public static final String CPUQUIET_GOVERNOR = "/sys/devices/system/cpu/cpuquiet/current_governor";
 	public static final String ENABLE_LP_OC = "/sys/module/cpu_tegra/parameters/enable_lp_oc";
-	public static final String GPU_DECOUPLE = "/sys/devices/gr3d/enable_3d_scaling";
+	public static final String GPU_SCALING = "/sys/devices/gr3d/enable_3d_scaling";
+	public static final String ACTIVE_CPUS = "/sys/devices/system/cpu/cpuquiet/tegra_cpuquiet/cpu_core_state";
+	public static final String MANUAL_HOTPLUG= "/sys/devices/system/cpu/cpuquiet/tegra_cpuquiet/manual_hotplug";
+    public static final String GPU_QUICK_OC= "/sys/kernel/tegra3_dvfs/gpu_quick_oc";
 }
 

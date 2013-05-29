@@ -16,5 +16,26 @@ public interface Settings {
 	public static final String SCREEN_STATE = "info.corne.performancetool.screenState";
 	public static final String WIFI_ALREADY_ON = "info.corne.performancetool.wifiAlreadyOn";
 	public static final String AUTO_WIFI = "info.corne.performancetool.autoWifi";
-	public static final String GPU_DECOUPLE_ENABLED = "info.corne.performancetool.gpuDecoupleEnabled";
+	public static final String GPU_SCALING = "info.corne.performancetool.gpuScaling";
+	public static final String CPU_HOTPLUGGING = "info.corne.performancetool.cpuHotplugging";
+	public static final String ACTIVE_CPUS = "info.corne.performancetool.activeCpus";
+    public static final String GPU_QUICK_OC = "info.corne.performancetool.gpuQuickOC";
+
+    // all settings that are stored in a profile
+    public static final String[] ALL_PROFILE = new String[] {
+        SELECTED_FREQ_SETTING,
+        SELECTED_GOV_SETTING,
+        SELECTED_SCHEDULER_SETTING,
+        OC_ENABLED,
+        MAX_CPUS,
+        SUSPEND_FREQ,
+        AUDIO_MIN_FREQ,
+        SELECTED_CPQGOV_SETTING,
+        LP_OC_ENABLED,
+        AUTO_WIFI,
+        GPU_SCALING,
+        CPU_HOTPLUGGING,
+        ACTIVE_CPUS,
+        GPU_QUICK_OC
+    };
 }
