@@ -15,5 +15,13 @@
         android:layout_height="wrap_content"
         android:text="@string/gpu_quick_oc" />
 
+    <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:id="@+id/gpuOCValues"
+            android:layout_gravity="left|center_vertical"
+            android:singleLine="true"/>
+
 
 </LinearLayout>

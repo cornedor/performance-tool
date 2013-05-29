@@ -5,6 +5,12 @@ A tool to change performance related settings on some mobile devices.
 
 Changelog
 ---------
+29/05/13
+
+ * More UI Changes
+ * Added Manual core support
+ * Added GPU Scaling
+ * Added Quick GPU OC Switch
 
 19/05/13
 

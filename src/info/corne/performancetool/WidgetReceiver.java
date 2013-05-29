@@ -22,7 +22,6 @@ package info.corne.performancetool;
  */
 import info.corne.performancetool.statics.AudioSettings;
 import info.corne.performancetool.statics.DefaultSettings;
-import info.corne.performancetool.statics.FileNames;
 import info.corne.performancetool.statics.PowerSettings;
 import info.corne.performancetool.statics.Settings;
 import android.app.PendingIntent;

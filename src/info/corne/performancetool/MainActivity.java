@@ -43,6 +43,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.RemoteViews;
 import android.widget.SeekBar;
 import android.widget.EditText;
@@ -53,8 +54,6 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.RadioButton;
-import android.widget.CheckBox;
-import android.util.Log;
 
 /**
  * The main class. This will load all the current settings and
@@ -118,7 +117,8 @@ public class MainActivity extends FragmentActivity implements
     int gpuScalingEnabled;
     boolean autoWifi;
     int gpuQuickOCEnabled;
-    
+    String gpuOCValuesString;
+
     /**
      * The {@link ViewPager} that will host the section contents.
      */
@@ -232,7 +232,15 @@ public class MainActivity extends FragmentActivity implements
                 FileNames.GPU_SCALING,
                 FileNames.MANUAL_HOTPLUG,
                 FileNames.ACTIVE_CPUS,
-                FileNames.GPU_QUICK_OC);
+                FileNames.GPU_QUICK_OC,
+                FileNames.GPU_OC);
+    }
+
+    public void getHardwareInfo(HardwareInfoPostRunnable postHook, String... params)
+    {
+        dialog = ProgressDialog.show(this, getResources().getString(R.string.please_wait), getResources().getString(R.string.gathering_info));
+        new GetHardwareInfoTask(postHook).execute(
+                params);
     }
 
     @Override
@@ -284,6 +292,7 @@ public class MainActivity extends FragmentActivity implements
         Switch lpOcSwitch = (Switch) findViewById(R.id.lpOverclockSwitch);
         Switch gpuScalingSwitch = (Switch) findViewById(R.id.gpuScalingSwitch);
         Switch gpuQuickOCSwitch = (Switch) findViewById(R.id.gpuOCSwitch);
+        TextView gpuOCValues = (TextView) findViewById(R.id.gpuOCValues);
 
         // The returned data will be stored in their variables.
         String[] governors = result[0].split(" ");
@@ -437,6 +446,13 @@ public class MainActivity extends FragmentActivity implements
                 gpuQuickOCSwitch.setChecked(false);
         } else {
             gpuQuickOCSwitch.setVisibility(View.GONE);
+        }
+
+        if(!result[17].equals("Error")){
+            gpuOCValuesString = result[17];
+            gpuOCValues.setText(gpuOCValuesString);
+        } else {
+            gpuOCValues.setVisibility(View.GONE);
         }
 
         dialog.dismiss();
@@ -639,7 +655,24 @@ public class MainActivity extends FragmentActivity implements
                 (gpuScalingEnabled ==1?"1":"0"),
                 (gpuQuickOCEnabled ==1?"1":"0")
         };
+
         new SetHardwareInfoTask(files, values, dialog).execute();
+
+        final TextView gpuOCValues = (TextView) findViewById(R.id.gpuOCValues);
+
+        getHardwareInfo(new HardwareInfoPostRunnable() {
+            @Override
+            public void run() {
+                if(!result[0].equals("Error")){
+                    gpuOCValuesString = result[0];
+                    gpuOCValues.setText(gpuOCValuesString);
+                } else {
+                    gpuOCValues.setVisibility(View.GONE);
+                }
+            }
+        }, FileNames.GPU_OC);
+
+        dialog.dismiss();
     }
     
     /**
@@ -928,9 +961,9 @@ public class MainActivity extends FragmentActivity implements
     }
     
     private String getActiveCpusSettingString() {
-        return new Integer(activeCpus[0]).toString()+" "+
-            new Integer(activeCpus[1]).toString()+" "+
-            new Integer(activeCpus[2]).toString();
+        return Integer.valueOf(activeCpus[0]).toString()+" "+
+            Integer.valueOf(activeCpus[1]).toString()+" "+
+            Integer.valueOf(activeCpus[2]).toString();
     }
     
     public void onActiveCpuChangeClick(View view) {
