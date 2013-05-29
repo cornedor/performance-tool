@@ -18,5 +18,6 @@ public interface FileNames {
 	public static final String ACTIVE_CPUS = "/sys/devices/system/cpu/cpuquiet/tegra_cpuquiet/cpu_core_state";
 	public static final String MANUAL_HOTPLUG= "/sys/devices/system/cpu/cpuquiet/tegra_cpuquiet/manual_hotplug";
     public static final String GPU_QUICK_OC= "/sys/kernel/tegra3_dvfs/gpu_quick_oc";
+    public static final String GPU_OC="/sys/kernel/tegra3_dvfs/gpu_oc";
 }
 
