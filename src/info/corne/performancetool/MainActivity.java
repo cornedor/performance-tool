@@ -17,9 +17,13 @@ import java.util.Locale;
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.FragmentTransaction;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -119,6 +123,9 @@ public class MainActivity extends FragmentActivity implements
     int gpuQuickOCEnabled;
     String gpuOCValuesString;
 
+    static public int NOTIFICATION_ID = 45001;
+    public static final String NOTIFY_EXTRA = "nl.corne.performancetool.notifyExtra";
+
     /**
      * The {@link ViewPager} that will host the section contents.
      */
@@ -171,6 +178,7 @@ public class MainActivity extends FragmentActivity implements
                     .setTabListener(this));
         }
         getHardwareInfo();
+        notifySaver(getApplicationContext());
         
     }
     @Override
@@ -837,6 +845,10 @@ public class MainActivity extends FragmentActivity implements
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
         RemoteViews rv = new RemoteViews(getApplicationContext().getPackageName(), R.layout.widget_layout);
+
+        if(pos == 1) notifyPower(getApplicationContext());
+        else notifySaver(getApplicationContext());
+
         if(pos == 0)
         {
             DefaultSettings settings = new DefaultSettings();
@@ -1051,4 +1063,40 @@ public class MainActivity extends FragmentActivity implements
         
         //Log.d("maxwen", "prefs="+sharedPreferences.getAll());
     }
+
+    public static void notifySaver(Context context)
+    {
+        Intent intent = new Intent(context, NotifyService.class);
+        intent.putExtra("aaa", 0);
+        intent.setAction("VIEW_DETAILS_PROPERTY");
+        PendingIntent pending = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+
+        Notification notification = new Notification.Builder(context)
+                .setContentTitle("Enable PowerSave")
+                .setContentText("Tab this notification to enable PowerSave.")
+                .setSmallIcon(R.drawable.ic_stat_notification_icon)
+                .setOngoing(true)
+                .setContentIntent(pending)
+                .build();
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.notify(NOTIFICATION_ID, notification);
+
+    }
+    public static void notifyPower(Context context)
+    {
+        Intent intent = new Intent(context, NotifyService.class);
+        intent.putExtra("aaa", 1);
+        intent.setAction("VIEW_DETAILS_PROPERTY");
+        PendingIntent pending = PendingIntent.getService(context, 0, intent, 0);
+        Notification notification = new Notification.Builder(context)
+                .setContentTitle("Disable PowerSave")
+                .setContentText("Tab this notification to disable PowerSave.")
+                .setSmallIcon(R.drawable.ic_stat_power)
+                .setOngoing(true)
+                .setContentIntent(pending)
+                .build();
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.notify(NOTIFICATION_ID, notification);
+    }
+
 }

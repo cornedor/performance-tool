@@ -11,6 +11,7 @@ import android.content.SharedPreferences.Editor;
 import android.net.wifi.WifiManager;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 public class UpdateService extends Service{
 	
@@ -27,7 +28,8 @@ public class UpdateService extends Service{
 	@Override
 	public int onStartCommand(final Intent intent, int flags, int startId) {
 		final UpdateService self = this;
-		new Thread(new Runnable() {
+        Log.d("corne", "Flags: " + flags);
+        new Thread(new Runnable() {
 			
 			@Override
 			public void run() {
