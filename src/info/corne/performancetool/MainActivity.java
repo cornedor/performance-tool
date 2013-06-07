@@ -1,19 +1,5 @@
 package info.corne.performancetool;
 
-import info.corne.performancetool.activities.AdvancedSettingsActivity;
-import info.corne.performancetool.activities.CPUSettingsActivity;
-import info.corne.performancetool.activities.ProfilesActivity;
-import info.corne.performancetool.activities.GPUSettingsActivity;
-import info.corne.performancetool.statics.AudioSettings;
-import info.corne.performancetool.statics.DefaultSettings;
-import info.corne.performancetool.statics.FileNames;
-import info.corne.performancetool.statics.PowerSettings;
-import info.corne.performancetool.statics.Settings;
-import info.corne.performancetool.statics.ProfileSettings;
-import info.corne.performancetool.utils.StringUtils;
-
-import java.util.Locale;
-
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.FragmentTransaction;
@@ -44,16 +30,30 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
-import android.widget.RemoteViews;
-import android.widget.SeekBar;
 import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.RadioButton;
+import android.widget.RemoteViews;
+import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.RadioButton;
+
+import java.util.Locale;
+
+import info.corne.performancetool.activities.AdvancedSettingsActivity;
+import info.corne.performancetool.activities.CPUSettingsActivity;
+import info.corne.performancetool.activities.GPUSettingsActivity;
+import info.corne.performancetool.activities.ProfilesActivity;
+import info.corne.performancetool.statics.AudioSettings;
+import info.corne.performancetool.statics.DefaultSettings;
+import info.corne.performancetool.statics.FileNames;
+import info.corne.performancetool.statics.PowerSettings;
+import info.corne.performancetool.statics.ProfileSettings;
+import info.corne.performancetool.statics.Settings;
+import info.corne.performancetool.utils.StringUtils;
 
 /**
  * The main class. This will load all the current settings and
@@ -118,6 +118,7 @@ public class MainActivity extends FragmentActivity implements
     boolean autoWifi;
     int gpuQuickOCEnabled;
     String gpuOCValuesString;
+    String a2dpFreq;
 
     /**
      * The {@link ViewPager} that will host the section contents.
@@ -233,7 +234,8 @@ public class MainActivity extends FragmentActivity implements
                 FileNames.MANUAL_HOTPLUG,
                 FileNames.ACTIVE_CPUS,
                 FileNames.GPU_QUICK_OC,
-                FileNames.GPU_OC);
+                FileNames.GPU_OC,
+                FileNames.A2DP_MIN_FREQ);
     }
 
     public void getHardwareInfo(HardwareInfoPostRunnable postHook, String... params)
@@ -293,6 +295,7 @@ public class MainActivity extends FragmentActivity implements
         Switch gpuScalingSwitch = (Switch) findViewById(R.id.gpuScalingSwitch);
         Switch gpuQuickOCSwitch = (Switch) findViewById(R.id.gpuOCSwitch);
         TextView gpuOCValues = (TextView) findViewById(R.id.gpuOCValues);
+        Spinner a2dpCapSpinner =(Spinner)findViewById(R.id.a2dpCapSpinner);
 
         // The returned data will be stored in their variables.
         String[] governors = result[0].split(" ");
@@ -301,16 +304,20 @@ public class MainActivity extends FragmentActivity implements
         String[] frequenciesShort = new String[freqencies.length + 1];
         String[] suspendFreqsShort = new String[freqencies.length + 1];
         String[] audioFreqsShort = new String[freqencies.length + 1];
+        String[] a2dpFreqShort = new String[freqencies.length + 1];
         Spinner cpqGovernorSpinner = (Spinner) findViewById(R.id.cpqGovernorSpinner);
         String[] cpqGovernors = result[10].split(" ");      
     
         frequenciesShort[0] = getResources().getString(R.string.disabled_string);
         suspendFreqsShort[0] = getResources().getString(R.string.disabled_string);
         audioFreqsShort[0] = getResources().getString(R.string.disabled_string);
+        a2dpFreqShort[0] = getResources().getString(R.string.disabled_string);
+
         ioSchedulers = result[4].split(" ");
         int currentFrequencyPos = freqencies.length-1;
         int currentSuspendPos = 0;
         int currentAudioPos = 0;
+        int currentA2dpPos = 0;
         int currentIOScheduler = ioSchedulers.length-1;
         // Will loop trough the frequencies and convert them to MHz.
         for(int i = 0; i < freqencies.length; i++)
@@ -332,18 +339,28 @@ public class MainActivity extends FragmentActivity implements
             else if(result[9].compareTo(freqencies[i]) == 0)
                 currentAudioPos = i + 1;
 
+            if(result[18].equals("Error"))
+                a2dpCapSpinner.setVisibility(View.GONE);
+            if(result[18].indexOf("000") == -1)
+                currentA2dpPos = 0;
+            else if(result[18].compareTo(freqencies[i]) == 0)
+                currentA2dpPos = i + 1;
+
             frequenciesShort[i + 1] = freqencies[i].replaceFirst("000", "") + getResources().getString(R.string.mhz);
             suspendFreqsShort[i + 1] = freqencies[i].replaceFirst("000", "") + getResources().getString(R.string.mhz);
             audioFreqsShort[i + 1] = freqencies[i].replaceFirst("000", "") + getResources().getString(R.string.mhz);
+            a2dpFreqShort[i + 1] = freqencies[i].replaceFirst("000", "") + getResources().getString(R.string.mhz);
         }
         // And that will also be stored in the adapter.
         frequencyCapSpinner.setAdapter(generateAdapter(frequenciesShort));
         suspendCapSpinner.setAdapter(generateAdapter(suspendFreqsShort));
         audioCapSpinner.setAdapter(generateAdapter(audioFreqsShort));
+        a2dpCapSpinner.setAdapter(generateAdapter(a2dpFreqShort));
         // And the current selected freq will be selected.
         frequencyCapSpinner.setSelection(currentFrequencyPos);
         suspendCapSpinner.setSelection(currentSuspendPos);
         audioCapSpinner.setSelection(currentAudioPos);
+        a2dpCapSpinner.setSelection(currentA2dpPos);
         
         // All the governors will be add to the spinner.
         governorSpinner.setAdapter(generateAdapter(governors));
@@ -629,12 +646,14 @@ public class MainActivity extends FragmentActivity implements
         String[] values = {
                 selectedScheduler,
                 suspendFreq,
-                audioFreq
+                audioFreq,
+                a2dpFreq
         };
         String[] files = {
                 FileNames.IO_SCHEDULERS,
                 FileNames.SUSPEND_FREQ,
-                FileNames.AUDIO_MIN_FREQ
+                FileNames.AUDIO_MIN_FREQ,
+                FileNames.A2DP_MIN_FREQ
         };
         new SetHardwareInfoTask(files, values, dialog).execute();
     }
@@ -1027,6 +1046,8 @@ public class MainActivity extends FragmentActivity implements
         gpuScalingEnabled = ((Switch)findViewById(R.id.gpuScalingSwitch)).isChecked()?1:0;
         autoWifi = ((CheckBox) findViewById(R.id.autoWifi)).isChecked();
         gpuQuickOCEnabled = ((Switch)findViewById(R.id.gpuOCSwitch)).isChecked()?1:0;
+        a2dpFreq = (String)(((Spinner) findViewById(R.id.a2dpCapSpinner)).getSelectedItem());
+        a2dpFreq = getFrequencyStringFromSpinner(a2dpFreq);
     }
         
     /* saves all actual values in preferences */
@@ -1046,7 +1067,8 @@ public class MainActivity extends FragmentActivity implements
         editor.putString(Settings.ACTIVE_CPUS + selectedProfile, activeCpusString);
         editor.putString(Settings.GPU_SCALING + selectedProfile, gpuScalingEnabled ==1?"1":"0");
         editor.putBoolean(Settings.AUTO_WIFI + selectedProfile, autoWifi);
-        editor.putString(Settings.GPU_QUICK_OC + selectedProfile, gpuQuickOCEnabled ==1?"1":"0");
+        editor.putString(Settings.GPU_QUICK_OC + selectedProfile, gpuQuickOCEnabled == 1 ? "1" : "0");
+        editor.putString(Settings.A2DP_MIN_FREQ + selectedProfile, a2dpFreq);
         editor.commit();
         
         //Log.d("maxwen", "prefs="+sharedPreferences.getAll());

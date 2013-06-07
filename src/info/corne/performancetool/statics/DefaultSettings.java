@@ -1,7 +1,8 @@
 package info.corne.performancetool.statics;
 
 import android.content.res.Resources;
-import info.corne.performancetool.R; 
+
+import info.corne.performancetool.R;
 
 public class DefaultSettings {
 	protected String ENABLE_OC = "0";
@@ -21,6 +22,7 @@ public class DefaultSettings {
 	protected String ACTIVE_CPUS = "0 0 0";
 	protected boolean AUTO_WIFI = false;
     protected String GPU_QUICK_OC = "0";
+    protected String A2DP_MIN_FREQ = "204000";
 
     public DefaultSettings() {
     }
@@ -40,7 +42,8 @@ public class DefaultSettings {
                 FileNames.CPUQUIET_GOVERNOR,
                 FileNames.MANUAL_HOTPLUG,
                 FileNames.ACTIVE_CPUS,
-                FileNames.GPU_QUICK_OC
+                FileNames.GPU_QUICK_OC,
+                FileNames.A2DP_MIN_FREQ
             };
     }
     
@@ -59,7 +62,8 @@ public class DefaultSettings {
                 CPUQUIET_GOVERNOR,
                 CPU_HOTPLUGGING,
                 ACTIVE_CPUS,
-                GPU_QUICK_OC
+                GPU_QUICK_OC,
+                A2DP_MIN_FREQ
             };
     }
     
@@ -91,6 +95,7 @@ public class DefaultSettings {
         message.append(resources.getString(R.string.io_scheduler) + ":" + IO_SCHEDULERS + "\n");
         message.append(resources.getString(R.string.suspend_cap) + ":" + getFreqValueString(SUSPEND_FREQ, resources) + "\n");
         message.append(resources.getString(R.string.audio_cap) + ":" + getFreqValueString(AUDIO_MIN_FREQ, resources) + "\n");
+        message.append(resources.getString(R.string.a2dp_cap) + ":" + getFreqValueString(A2DP_MIN_FREQ, resources) + "\n");
         message.append(resources.getString(R.string.auto_wifi) + ":" + Boolean.toString(AUTO_WIFI) + "\n");
         message.append(resources.getString(R.string.allow_gpu_scaling) + ":" + getIntValueString(GPU_SCALING) + "\n");
         message.append(resources.getString(R.string.gpu_quick_oc) + ":" + getIntValueString(GPU_QUICK_OC) + "\n");

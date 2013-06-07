@@ -1,14 +1,16 @@
 package info.corne.performancetool;
 
-import info.corne.performancetool.statics.FileNames;
-import info.corne.performancetool.statics.Settings;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+
 import java.io.File;
+
+import info.corne.performancetool.statics.FileNames;
+import info.corne.performancetool.statics.Settings;
 
 /**
  * This service will change settings on boot
@@ -79,6 +81,7 @@ public class BootService extends Service{
 				String cpuHotplugging = sharedPreferences.getString(Settings.CPU_HOTPLUGGING, "0");
 				String activeCpus = parseActiveCpusView(sharedPreferences.getString(Settings.ACTIVE_CPUS, ""));
                 String gpuQuickOC = sharedPreferences.getString(Settings.GPU_QUICK_OC, "0");
+                String a2dpFreq = sharedPreferences.getString(Settings.A2DP_MIN_FREQ, "204000");
 
 				String[] frequencyCommand = {"su", "-c", "echo " + selectedFrequencyCap + " > " + FileNames.CPU_USER_CAP};
 				String[] schedulerCommand = {"su", "-c", "echo " + selectedScheduler + " > " + FileNames.IO_SCHEDULERS };
@@ -94,6 +97,7 @@ public class BootService extends Service{
 				String[] cpuHotpluggingCommand = {"su", "-c", "echo " + cpuHotplugging + " > " + FileNames.MANUAL_HOTPLUG};
 				String[] activeCpusCommand = {"su", "-c", "echo " + activeCpus + " > " + FileNames.ACTIVE_CPUS};
                 String[] gpuQuickOCCommand = {"su", "-c", "echo " + gpuQuickOC + " > " + FileNames.GPU_QUICK_OC};
+                String[] a2dpFreqCommand = {"su", "-c", "echo " + a2dpFreq + " > " + FileNames.A2DP_MIN_FREQ};
 
                 File f;
 				
@@ -143,6 +147,10 @@ public class BootService extends Service{
                 f=new File(FileNames.GPU_QUICK_OC);
                 if(f.exists())
                     ShellCommand.run(gpuQuickOCCommand);
+
+                f=new File(FileNames.A2DP_MIN_FREQ);
+                if(f.exists())
+                    ShellCommand.run(a2dpFreqCommand);
 
             }
 			return null;

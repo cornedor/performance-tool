@@ -20,5 +20,6 @@ public class ProfileSettings extends DefaultSettings {
         ACTIVE_CPUS = sharedPreferences.getString(Settings.ACTIVE_CPUS + selectedProfile, "0 0 0");
 	    AUTO_WIFI = sharedPreferences.getBoolean(Settings.AUTO_WIFI + selectedProfile, false);
         GPU_QUICK_OC = sharedPreferences.getString(Settings.GPU_QUICK_OC + selectedProfile, "0");
+        A2DP_MIN_FREQ = sharedPreferences.getString(Settings.A2DP_MIN_FREQ + selectedProfile, "204000");
     }
 }

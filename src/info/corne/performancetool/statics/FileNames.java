@@ -19,5 +19,6 @@ public interface FileNames {
 	public static final String MANUAL_HOTPLUG= "/sys/devices/system/cpu/cpuquiet/tegra_cpuquiet/manual_hotplug";
     public static final String GPU_QUICK_OC= "/sys/kernel/tegra3_dvfs/gpu_quick_oc";
     public static final String GPU_OC="/sys/kernel/tegra3_dvfs/gpu_oc";
+    public static final String A2DP_MIN_FREQ="/sys/devices/platform/tegra_uart_brcm.2/a2dp_tuning_freq";
 }
 

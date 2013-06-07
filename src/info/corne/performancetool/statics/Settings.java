@@ -20,6 +20,7 @@ public interface Settings {
 	public static final String CPU_HOTPLUGGING = "info.corne.performancetool.cpuHotplugging";
 	public static final String ACTIVE_CPUS = "info.corne.performancetool.activeCpus";
     public static final String GPU_QUICK_OC = "info.corne.performancetool.gpuQuickOC";
+    public static final String A2DP_MIN_FREQ = "info.corne.performancetool.a2dpinFreq";
 
     // all settings that are stored in a profile
     public static final String[] ALL_PROFILE = new String[] {
@@ -36,6 +37,7 @@ public interface Settings {
         GPU_SCALING,
         CPU_HOTPLUGGING,
         ACTIVE_CPUS,
-        GPU_QUICK_OC
+        GPU_QUICK_OC,
+        A2DP_MIN_FREQ
     };
 }
